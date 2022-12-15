@@ -1,5 +1,6 @@
 #!/usr/bin/env -S deno run
 
+//@ts-ignore
 import { stringify, parse } from "./index.mts"
 
 {

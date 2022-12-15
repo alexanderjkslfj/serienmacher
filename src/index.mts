@@ -1,3 +1,4 @@
+//@ts-ignore
 import natives from "./natives.mts"
 
 enum valueType {
