@@ -65,5 +65,5 @@ import { stringify, parse } from "./index.mts"
     const x = stringify(a)
     const y = parse(x)
 
-    console.log(x?.length === y?.length)
+    console.log(a?.length === y?.length)
 }
