@@ -33,8 +33,8 @@ import { stringify, parse } from "./index.mts"
 }
 
 {
-    const a = {b: {}}
-    const b = {a: a}
+    const a = { b: {} }
+    const b = { a: a }
     a.b = b
 
     const x = parse(stringify(a))
@@ -61,7 +61,7 @@ import { stringify, parse } from "./index.mts"
 
 {
     const a = ["a", "b", "c"]
-    
+
     const x = stringify(a)
     const y = parse(x)
 
@@ -70,7 +70,7 @@ import { stringify, parse } from "./index.mts"
 
 {
     const a = ["a", "b", "c"]
-    
+
     const x = stringify(a)
     const y = parse(x)
 
@@ -81,7 +81,7 @@ import { stringify, parse } from "./index.mts"
 
 {
     const a = ["a", "b", "c"]
-    
+
     const x = stringify(a)
     const y = parse(x)
 
