@@ -74,7 +74,18 @@ import { stringify, parse } from "./index.mts"
     const x = stringify(a)
     const y = parse(x)
 
-    y.constructor.prototype.push.apply(y, ["d"])
+    y?.constructor?.prototype?.push?.apply?.(y, ["d"])
+
+    console.log(y.length === 4)
+}
+
+{
+    const a = ["a", "b", "c"]
+    
+    const x = stringify(a)
+    const y = parse(x)
+
+    y?.push?.("d")
 
     console.log(y.length === 4)
 }
