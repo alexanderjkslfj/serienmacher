@@ -1,9 +1,12 @@
+import natives from "./natives.mts"
+
 enum valueType {
     JSONREADY,
     COMPLEX,
     BIGINT,
     SYMBOL,
-    UNDEFINED
+    UNDEFINED,
+    NATIVE
 }
 
 export function stringify(something: any): string {
@@ -35,18 +38,24 @@ function parseBasic(type: valueType, value: string): any {
     }
 }
 
-function parseComplex(value: parsedObject[]): object {
+function parseComplex(value: (parsedObject | number)[]): object {
     const input = value
     const output: object[] = []
 
     for (const object of input) {
-        output.push((object.fData === null)
-            ? {}
-            : parseFunctionData(object.fData)
+        output.push((typeof object === "number")
+            ? natives[object]
+            : (object.fun === null)
+                ? {}
+                : parseFunctionString(object.fun)
         )
     }
 
     for (let i = 0; i < input.length; i++) {
+        if (typeof input[i] === "number")
+            continue
+
+        //@ts-ignore
         for (const prop of input[i].props) {
 
             const key = prop.key.symbol ? Symbol[prop.key.value] : prop.key.value
@@ -90,6 +99,8 @@ function serializeBasic(type: valueType, basic: string | number | boolean | symb
             return findSymbol(basic)
         case valueType.UNDEFINED:
             return ""
+        case valueType.NATIVE:
+            return natives[basic]
     }
     console.error("Invalid parameter passed to basic2str:", basic)
     throw "ParameterError"
@@ -113,7 +124,7 @@ function getValueType(value: any): valueType {
 }
 
 type parsedObject = {
-    fData: functionData | null,
+    fun: string | null,
     props: property[]
 }
 
@@ -138,8 +149,8 @@ type propertyDescriptor = {
     set: number
 }
 
-function serializeComplex(complex: object): parsedObject[] {
-    const parsed: parsedObject[] = []
+function serializeComplex(complex: object): (parsedObject | number)[] {
+    const parsed: (parsedObject | number)[] = []
     const objects: object[] = [complex]
 
     function findOrAddObject(object: object): number {
@@ -155,8 +166,14 @@ function serializeComplex(complex: object): parsedObject[] {
     for (let serialized = 0; serialized < objects.length; serialized++) {
         const current = objects[serialized]
 
+        const nativeIndex = findNativeIndex(current)
+        if (nativeIndex !== -1) {
+            parsed.push(nativeIndex)
+            continue
+        }
+
         const p: parsedObject = {
-            fData: getFunctionData(current),
+            fun: (typeof current === "function") ? getFunctionString(current) : null,
             props: []
         }
 
@@ -169,47 +186,46 @@ function serializeComplex(complex: object): parsedObject[] {
 
             const symbolName = (typeof key === "symbol") ? tryFindSymbol(key) : ""
 
-            if (symbolName !== null) {
+            if (symbolName === null)
+                continue
 
-                const getter = rawDescriptor.get
-                const setter = rawDescriptor.set
+            const getter = rawDescriptor.get
+            const setter = rawDescriptor.set
 
-                const getterIndex = (typeof getter === "function")
-                    ? findOrAddObject(getter)
+            const getterIndex = (typeof getter === "function")
+                ? findOrAddObject(getter)
+                : -1
+
+            const setterIndex = (typeof setter === "function")
+                ? findOrAddObject(setter)
+                : -1
+
+            const value = rawDescriptor.value
+            const type = getValueType(value)
+
+            let valueIndex = (type === valueType.COMPLEX)
+                ? findOrAddObject(value)
+                : -1
+
+            const descriptor: propertyDescriptor = {
+                configurable: (typeof rawDescriptor.configurable === "boolean") ? rawDescriptor.configurable : true,
+                enumerable: (typeof rawDescriptor.enumerable === "boolean") ? rawDescriptor.enumerable : false,
+                writable: (typeof rawDescriptor.writable === "boolean") ? rawDescriptor.writable : true,
+                get: getterIndex,
+                set: setterIndex,
+                value: (getterIndex === -1 && setterIndex === -1)
+                    ? ((valueIndex === -1) ? serializeBasic(type, value) : valueIndex)
                     : -1
-
-                const setterIndex = (typeof setter === "function")
-                    ? findOrAddObject(setter)
-                    : -1
-
-                const value = rawDescriptor.value
-                const type = getValueType(value)
-
-                let valueIndex = (type === valueType.COMPLEX)
-                    ? findOrAddObject(value)
-                    : -1
-
-                const descriptor: propertyDescriptor = {
-                    configurable: (typeof rawDescriptor.configurable === "boolean") ? rawDescriptor.configurable : true,
-                    enumerable: (typeof rawDescriptor.enumerable === "boolean") ? rawDescriptor.enumerable : false,
-                    writable: (typeof rawDescriptor.writable === "boolean") ? rawDescriptor.writable : true,
-                    get: getterIndex,
-                    set: setterIndex,
-                    value: (getterIndex === -1 && setterIndex === -1)
-                        ? ((valueIndex === -1) ? serializeBasic(type, value) : valueIndex)
-                        : -1
-                }
-
-                p.props.push({
-                    key: {
-                        symbol: typeof key === "symbol",
-                        value: (typeof key === "symbol") ? findSymbol(key) : key
-                    },
-                    type: type,
-                    descriptor: descriptor
-                })
-
             }
+
+            p.props.push({
+                key: {
+                    symbol: typeof key === "symbol",
+                    value: (typeof key === "symbol") ? findSymbol(key) : key
+                },
+                type: type,
+                descriptor: descriptor
+            })
 
         }
 
@@ -220,34 +236,8 @@ function serializeComplex(complex: object): parsedObject[] {
 
 }
 
-function getFunctionData(object: object): functionData | null {
-    if (typeof object === "function") {
-        const native = isNative(object)
-        return (native)
-            ? {
-                native: true,
-                value: getNativeId(object)
-            }
-            : {
-                native: false,
-                value: getFunctionString(object)
-            }
-    }
-    return null
-}
-
-function isNative(object: CallableFunction): boolean {
-    return object.toString().match(/^\s*((\([^)]*\)\s*=>)|(function[^(]*\([^)]*\)))\s*{\s*\[native code\]\s*}\s*$/) !== null
-}
-
-// TODO: actually implement
-function getNativeId(object: CallableFunction): number {
-    return 0
-}
-
-// TODO: actually implement
-function useNativeId(id: number): CallableFunction {
-    return () => { }
+function findNativeIndex(object: object): number {
+    return natives.findIndex((native: object) => native === object)
 }
 
 // TODO: improve
@@ -265,12 +255,6 @@ function findSymbol(symbol: symbol): string {
     if (key === undefined)
         throw "Unknown symbol"
     return key
-}
-
-function parseFunctionData(data: functionData): CallableFunction {
-    return (data.native)
-        ? useNativeId(data.value)
-        : parseFunctionString(data.value)
 }
 
 // TODO: improve
