@@ -46,21 +46,14 @@ function parseComplex(value: parsedObject[]): object {
         )
     }
 
-    for(let i = 0; i < input.length; i++) {
+    for (let i = 0; i < input.length; i++) {
         for (const prop of input[i].props) {
-            
-            const key = prop.key.symbol ? Symbol[prop.key.value] : prop.key.value
 
-            const value = (prop.type === valueType.COMPLEX)
-                ? output[prop.descriptor.value]
-                //@ts-ignore
-                : parseBasic(prop.type, prop.descriptor.value)
+            const key = prop.key.symbol ? Symbol[prop.key.value] : prop.key.value
 
             const descriptor: PropertyDescriptor = {
                 configurable: prop.descriptor.configurable,
-                enumerable: prop.descriptor.enumerable,
-                writable: prop.descriptor.writable,
-                value: value
+                enumerable: prop.descriptor.enumerable
             }
 
             if (prop.descriptor.set !== -1)
@@ -70,6 +63,14 @@ function parseComplex(value: parsedObject[]): object {
             if (prop.descriptor.get !== -1)
                 //@ts-ignore
                 descriptor.get = output[prop.descriptor.get]
+
+            if (prop.descriptor.set === -1 && prop.descriptor.get === -1) {
+                descriptor.writable = prop.descriptor.writable
+                descriptor.value = (prop.type === valueType.COMPLEX)
+                    ? output[prop.descriptor.value]
+                    //@ts-ignore
+                    : parseBasic(prop.type, prop.descriptor.value)
+            }
 
             Object.defineProperty(output[i], key, descriptor)
         }
@@ -160,9 +161,11 @@ function serializeComplex(complex: object): parsedObject[] {
         }
 
         const keys = Reflect.ownKeys(current)
+        if ("constructor" in current)
+            keys.push("constructor")
 
         for (const key of keys) {
-            const rawDescriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(current, key)!
+            const rawDescriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(current, key)! || { value: current[key] }
 
             const symbolName = (typeof key === "symbol") ? tryFindSymbol(key) : ""
 
@@ -188,11 +191,13 @@ function serializeComplex(complex: object): parsedObject[] {
 
                 const descriptor: propertyDescriptor = {
                     configurable: (typeof rawDescriptor.configurable === "boolean") ? rawDescriptor.configurable : true,
-                    enumerable: (typeof rawDescriptor.enumerable === "boolean") ? rawDescriptor.enumerable : true,
+                    enumerable: (typeof rawDescriptor.enumerable === "boolean") ? rawDescriptor.enumerable : false,
                     writable: (typeof rawDescriptor.writable === "boolean") ? rawDescriptor.writable : true,
                     get: getterIndex,
                     set: setterIndex,
-                    value: (valueIndex === -1) ? serializeBasic(type, value) : valueIndex
+                    value: (getterIndex === -1 && setterIndex === -1)
+                        ? ((valueIndex === -1) ? serializeBasic(type, value) : valueIndex)
+                        : -1
                 }
 
                 p.props.push({
