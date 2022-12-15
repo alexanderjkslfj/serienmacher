@@ -12,14 +12,14 @@ import { stringify, parse } from "./index.mts"
     const x = stringify({ a: 5 })
     const y = parse(x)
 
-    console.log(y.a === 5)
+    console.log(y?.a === 5)
 }
 
 {
     const x = stringify({ a: "b" })
     const y = parse(x)
 
-    console.log(y.a === "b")
+    console.log(y?.a === "b")
 }
 
 {
@@ -29,7 +29,7 @@ import { stringify, parse } from "./index.mts"
     const x = stringify(a)
     const y = parse(x)
 
-    console.log(y.a.a.a.a.a === y)
+    console.log(y?.a?.a?.a?.a?.a === y)
 }
 
 {
@@ -39,7 +39,7 @@ import { stringify, parse } from "./index.mts"
 
     const x = parse(stringify(a))
 
-    console.log(x.b.a.b.a === x)
+    console.log(x?.b?.a?.b?.a === x)
 }
 
 {
@@ -56,7 +56,7 @@ import { stringify, parse } from "./index.mts"
     const c = stringify(b)
     const d = parse(c)
 
-    console.log(b.b === d.b)
+    console.log(b.b === d?.b)
 }
 
 {
@@ -65,5 +65,5 @@ import { stringify, parse } from "./index.mts"
     const x = stringify(a)
     const y = parse(x)
 
-    console.log(a?.length === y?.length)
+    console.log(a.length === y?.length)
 }
