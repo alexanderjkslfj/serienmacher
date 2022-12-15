@@ -192,7 +192,7 @@ function serializeComplex(complex: object): parsedObject[] {
                     writable: (typeof rawDescriptor.writable === "boolean") ? rawDescriptor.writable : true,
                     get: getterIndex,
                     set: setterIndex,
-                    value: (valueIndex === -1) ? serializeBasic(type, value)[0] : valueIndex
+                    value: (valueIndex === -1) ? serializeBasic(type, value) : valueIndex
                 }
 
                 p.props.push({
