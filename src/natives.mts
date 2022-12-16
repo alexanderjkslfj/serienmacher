@@ -31,8 +31,6 @@ if (["object", "function"].includes(typeof AuthenticatorAttestationResponse) && 
 if (["object", "function"].includes(typeof AuthenticatorResponse) && AuthenticatorResponse !== null) natives.add(AuthenticatorResponse)
 if (["object", "function"].includes(typeof AudioProcessingEvent) && AudioProcessingEvent !== null) natives.add(AudioProcessingEvent)
 if (["object", "function"].includes(typeof addEventListener) && addEventListener !== null) natives.add(addEventListener)
-if (["object", "function"].includes(typeof afterAll) && afterAll !== null) natives.add(afterAll)
-if (["object", "function"].includes(typeof afterEach) && afterEach !== null) natives.add(afterEach)
 if (["object", "function"].includes(typeof alert) && alert !== null) natives.add(alert)
 if (["object", "function"].includes(typeof atob) && atob !== null) natives.add(atob)
 
@@ -48,8 +46,6 @@ if (["object", "function"].includes(typeof BlobEvent) && BlobEvent !== null) nat
 if (["object", "function"].includes(typeof Boolean) && Boolean !== null) natives.add(Boolean)
 if (["object", "function"].includes(typeof BroadcastChannel) && BroadcastChannel !== null) natives.add(BroadcastChannel)
 if (["object", "function"].includes(typeof ByteLengthQueuingStrategy) && ByteLengthQueuingStrategy !== null) natives.add(ByteLengthQueuingStrategy)
-if (["object", "function"].includes(typeof beforeAll) && beforeAll !== null) natives.add(beforeAll)
-if (["object", "function"].includes(typeof beforeEach) && beforeEach !== null) natives.add(beforeEach)
 if (["object", "function"].includes(typeof blur) && blur !== null) natives.add(blur)
 if (["object", "function"].includes(typeof btoa) && btoa !== null) natives.add(btoa)
 
@@ -144,7 +140,6 @@ if (["object", "function"].includes(typeof DragEvent) && DragEvent !== null) nat
 if (["object", "function"].includes(typeof DynamicsCompressorNode) && DynamicsCompressorNode !== null) natives.add(DynamicsCompressorNode)
 if (["object", "function"].includes(typeof decodeURI) && decodeURI !== null) natives.add(decodeURI)
 if (["object", "function"].includes(typeof decodeURIComponent) && decodeURIComponent !== null) natives.add(decodeURIComponent)
-if (["object", "function"].includes(typeof describe) && describe !== null) natives.add(describe)
 if (["object", "function"].includes(typeof dispatchEvent) && dispatchEvent !== null) natives.add(dispatchEvent)
 if (["object", "function"].includes(typeof document) && document !== null) natives.add(document)
 
@@ -162,7 +157,6 @@ if (["object", "function"].includes(typeof External) && External !== null) nativ
 if (["object", "function"].includes(typeof encodeURI) && encodeURI !== null) natives.add(encodeURI)
 if (["object", "function"].includes(typeof encodeURIComponent) && encodeURIComponent !== null) natives.add(encodeURIComponent)
 if (["object", "function"].includes(typeof eval) && eval !== null) natives.add(eval)
-if (["object", "function"].includes(typeof expect) && expect !== null) natives.add(expect)
 if (["object", "function"].includes(typeof escape) && escape !== null) natives.add(escape)
 //@ts-ignore
 if (["object", "function"].includes(typeof event) && event !== null) natives.add(event)
@@ -188,10 +182,7 @@ if (["object", "function"].includes(typeof FontFaceSetLoadEvent) && FontFaceSetL
 if (["object", "function"].includes(typeof FormData) && FormData !== null) natives.add(FormData)
 if (["object", "function"].includes(typeof FormDataEvent) && FormDataEvent !== null) natives.add(FormDataEvent)
 if (["object", "function"].includes(typeof Function) && Function !== null) natives.add(Function)
-if (["object", "function"].includes(typeof fail) && fail !== null) natives.add(fail)
-if (["object", "function"].includes(typeof fdescribe) && fdescribe !== null) natives.add(fdescribe)
 if (["object", "function"].includes(typeof fetch) && fetch !== null) natives.add(fetch)
-if (["object", "function"].includes(typeof fit) && fit !== null) natives.add(fit)
 if (["object", "function"].includes(typeof focus) && focus !== null) natives.add(focus)
 if (["object", "function"].includes(typeof frameElement) && frameElement !== null) natives.add(frameElement)
 if (["object", "function"].includes(typeof frames) && frames !== null) natives.add(frames)
