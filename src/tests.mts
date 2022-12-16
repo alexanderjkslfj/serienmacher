@@ -127,7 +127,7 @@ const tests: Test[] = [
         const aVal = a(1, 2)
         const yVal = y(1, 2)
 
-        return [aVal === 3 && aVal === yVal, typeof yVal]
+        return [aVal === 3 && aVal === yVal, yVal]
     })
 ];
 
