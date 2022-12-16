@@ -2,7 +2,7 @@
   "name": "serienmacher",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.mjs",
   "scripts": {
     "build": "tsc",
     "test": "node ./dist/tests.mjs"
