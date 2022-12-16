@@ -90,3 +90,14 @@ import { stringify, parse } from "./index.mts"
 
     console.log(y.length === 4)
 }
+
+{
+    const a = function b() {
+
+    }
+
+    const x = stringify(a)
+    const y = parse(x)
+
+    console.log(a.name === y.name)
+}
