@@ -260,7 +260,6 @@ function findNativeIndex(object: object): number {
     return natives.findIndex((native: object) => native === object)
 }
 
-// TODO: improve
 function getFunctionString(object: CallableFunction): string {
     return object.toString()
 }
@@ -277,7 +276,6 @@ function findSymbol(symbol: symbol): string {
     return key
 }
 
-// TODO: improve
 function parseFunctionString(str: string): CallableFunction {
     return new Function(str)
 }
