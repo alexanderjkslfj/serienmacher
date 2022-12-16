@@ -24,6 +24,15 @@ class Test {
             return false
         }
     }
+
+    public static async runTests(tests: Test[]): Promise<boolean> {
+        let success = true
+        for (const test of tests) {
+            const result = await test.runTest();
+            if (result === false) success = false
+        }
+        return success
+    }
 }
 
 const tests: Test[] = [
@@ -131,8 +140,4 @@ const tests: Test[] = [
     })
 ];
 
-(async () => {
-    for (const test of tests) {
-        await test.runTest()
-    }
-})()
+Test.runTests(tests)
