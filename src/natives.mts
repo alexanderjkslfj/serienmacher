@@ -409,8 +409,6 @@ for (const object of natives) {
         try {
             const value = Object.getOwnPropertyDescriptor(object, key)?.value || object[key]
 
-            console.log(value)
-
             if (["object", "function"].includes(typeof value) && value !== null)
                 natives.add(value)
         } catch { }
