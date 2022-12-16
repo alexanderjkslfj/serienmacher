@@ -1,5 +1,4 @@
-//@ts-ignore
-import natives from "./natives.mts"
+import natives from "./natives.mjs"
 
 enum valueType {
     JSONREADY,
@@ -109,6 +108,7 @@ function serializeBasic(type: valueType, basic: string | number | boolean | symb
         case valueType.UNDEFINED:
             return ""
         case valueType.NATIVE:
+            //@ts-ignore
             return natives[basic]
     }
     console.error("Invalid parameter passed to basic2str:", basic)

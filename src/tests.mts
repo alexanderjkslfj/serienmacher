@@ -1,7 +1,4 @@
-#!/usr/bin/env -S deno run
-
-//@ts-ignore
-import { stringify, parse } from "./index.mts"
+import { stringify, parse } from "./index.mjs"
 
 {
     const x = parse(stringify("Hello World"))
