@@ -84,6 +84,14 @@ function parseComplex(value: (parsedObject | number)[]): object {
 
             Object.defineProperty(output[i], key, descriptor)
         }
+
+        //@ts-ignore
+        Object.setPrototypeOf(output[i], (input[i].proto.native)
+            //@ts-ignore
+            ? natives[input[i].proto.index]
+            //@ts-ignore
+            : output[input[i].proto.index]
+        )
     }
 
     return output[0]
@@ -126,7 +134,13 @@ function getValueType(value: any): valueType {
 
 type parsedObject = {
     fun: string | null,
+    proto: proto,
     props: property[]
+}
+
+type proto = {
+    native: boolean,
+    index: number
 }
 
 type property = {
@@ -170,17 +184,25 @@ function serializeComplex(complex: object): (parsedObject | number)[] {
             continue
         }
 
+        const proto = Object.getPrototypeOf(current)
+        let nativeProto = true
+        let protoIndex = findNativeIndex(proto)
+        if (protoIndex === -1) {
+            nativeProto = false
+            protoIndex = findOrAddObject(proto)
+        }
+
         const p: parsedObject = {
             fun: (typeof current === "function") ? getFunctionString(current) : null,
+            proto: {
+                native: nativeProto,
+                index: protoIndex
+            },
             props: []
         }
 
-        const keys = Reflect.ownKeys(current)
-        if ("constructor" in current)
-            keys.push("constructor")
-
-        for (const key of keys) {
-            const rawDescriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(current, key)! || { value: current[key] }
+        for (const key of Reflect.ownKeys(current)) {
+            const rawDescriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(current, key)!
 
             const symbolName = (typeof key === "symbol") ? tryFindSymbol(key) : ""
 
