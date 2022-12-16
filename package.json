@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "deno run ./src/tests.mts"
+    "build": "tsc",
+    "test": "node ./dist/tests.mjs"
   },
   "keywords": [],
   "author": "",
