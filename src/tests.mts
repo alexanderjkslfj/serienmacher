@@ -115,6 +115,19 @@ const tests: Test[] = [
         const y = parse(x)
 
         return [a.name === y?.name, y]
+    }),
+    new Test("Function Value", () => {
+        const a = function b(n: number, m: number): number {
+            return n + m
+        }
+
+        const x = stringify(a)
+        const y = parse(x)
+
+        const aVal = a(1, 2)
+        const yVal = y(1, 2)
+
+        return [aVal === 3 && aVal === yVal, typeof yVal]
     })
 ];
 
