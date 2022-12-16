@@ -1,100 +1,125 @@
 import { stringify, parse } from "./index.mjs"
 
-{
-    const x = parse(stringify("Hello World"))
+type TestMethod = () => ([boolean, any] | Promise<[boolean, any]>)
 
-    console.log(x === "Hello World")
-}
+class Test {
+    private name: string
+    private method: TestMethod
 
-{
-    const x = stringify({ a: 5 })
-    const y = parse(x)
+    public constructor(name: string, method: TestMethod) {
+        this.name = name
+        this.method = method
+    }
 
-    console.log(y?.a === 5)
-}
-
-{
-    const x = stringify({ a: "b" })
-    const y = parse(x)
-
-    console.log(y?.a === "b")
-}
-
-{
-    const a = { a: {} }
-    a.a = a
-
-    const x = stringify(a)
-    const y = parse(x)
-
-    console.log(y?.a?.a?.a?.a?.a === y)
-}
-
-{
-    const a = { b: {} }
-    const b = { a: a }
-    a.b = b
-
-    const x = parse(stringify(a))
-
-    console.log(x?.b?.a?.b?.a === x)
-}
-
-{
-    class a {
-        public b: number
-
-        constructor() {
-            this.b = 5
+    public async runTest(): Promise<boolean> {
+        try {
+            const result = await this.method()
+            if (result[0])
+                console.log(`✅ Success: Test "${this.name}" was successful.`)
+            else
+                console.log(`❌ Error: Test "${this.name}" returned a wrong result:`)
+            return result[0]
+        } catch (err) {
+            console.log(`❌ Error: Test "${this.name}" returned an error:`, err)
+            return false
         }
     }
-
-    const b = new a()
-
-    const c = stringify(b)
-    const d = parse(c)
-
-    console.log(b.b === d?.b)
 }
 
-{
-    const a = ["a", "b", "c"]
+const tests: Test[] = [
+    new Test("Simple String", () => {
+        const x = parse(stringify("Hello World"))
 
-    const x = stringify(a)
-    const y = parse(x)
+        return [x === "Hello World", x]
+    }),
+    new Test("Basic Object", () => {
+        const x = stringify({ a: 5 })
+        const y = parse(x)
 
-    console.log(a.length === y?.length)
-}
+        return [y?.a === 5, y]
+    }),
+    new Test("Basic Object with String", () => {
+        const x = stringify({ a: "b" })
+        const y = parse(x)
 
-{
-    const a = ["a", "b", "c"]
+        return [y?.a === "b", y]
+    }),
+    new Test("Cyclic Object", () => {
+        const a = { a: {} }
+        a.a = a
 
-    const x = stringify(a)
-    const y = parse(x)
+        const x = stringify(a)
+        const y = parse(x)
 
-    y?.constructor?.prototype?.push?.apply?.(y, ["d"])
+        return [y?.a?.a?.a?.a?.a === y, y]
+    }),
+    new Test("Cyclic Object with Extra Steps", () => {
+        const a = { b: {} }
+        const b = { a: a }
+        a.b = b
 
-    console.log(y.length === 4)
-}
+        const x = parse(stringify(a))
 
-{
-    const a = ["a", "b", "c"]
+        return [x?.b?.a?.b?.a === x, x]
+    }),
+    new Test("Simple new-based Object", () => {
+        class a {
+            public b: number
 
-    const x = stringify(a)
-    const y = parse(x)
+            constructor() {
+                this.b = 5
+            }
+        }
 
-    y?.push?.("d")
+        const b = new a()
 
-    console.log(y.length === 4)
-}
+        const c = stringify(b)
+        const d = parse(c)
 
-{
-    const a = function b() {
+        return [b.b === d?.b, d]
+    }),
+    new Test("Array Values", () => {
+        const a = ["a", "b", "c"]
 
+        const x = stringify(a)
+        const y = parse(x)
+
+        return [a.length === y?.length, y]
+    }),
+    new Test("Array Constructor Methods", () => {
+        const a = ["a", "b", "c"]
+
+        const x = stringify(a)
+        const y = parse(x)
+
+        y?.constructor?.prototype?.push?.apply?.(y, ["d"])
+
+        return [y?.length === 4, y]
+    }),
+    new Test("Array Inherited Methods", () => {
+        const a = ["a", "b", "c"]
+
+        const x = stringify(a)
+        const y = parse(x)
+
+        y?.push?.("d")
+
+        return [y?.length === 4, y]
+    }),
+    new Test("Function Name", () => {
+        const a = function b() {
+
+        }
+
+        const x = stringify(a)
+        const y = parse(x)
+
+        return [a.name === y?.name, y]
+    })
+];
+
+(async () => {
+    for (const test of tests) {
+        await test.runTest()
     }
-
-    const x = stringify(a)
-    const y = parse(x)
-
-    console.log(a.name === y.name)
-}
+})()
