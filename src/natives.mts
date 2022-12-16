@@ -404,8 +404,6 @@ if (["object", "function"].includes(typeof XSLTProcessor) && XSLTProcessor !== n
 for (const object of natives) {
 
     const keys = Reflect.ownKeys(object)
-    if ("constructor" in object)
-        keys.push("constructor")
 
     for (const key of keys) {
         try {
@@ -413,11 +411,14 @@ for (const object of natives) {
 
             console.log(value)
 
-            if (["object", "function"].includes(typeof value) && value !== null) {
+            if (["object", "function"].includes(typeof value) && value !== null)
                 natives.add(value)
-            }
         } catch { }
     }
+
+    const proto = Object.getPrototypeOf(object)
+    if (["object", "function"].includes(typeof proto) && proto !== null)
+        natives.add(proto)
 
 }
 
