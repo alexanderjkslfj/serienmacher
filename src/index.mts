@@ -129,9 +129,6 @@ type parsedObject = {
     props: property[]
 }
 
-type functionData =
-    { native: true, value: number } | { native: false, value: string }
-
 type property = {
     key: {
         symbol: boolean
