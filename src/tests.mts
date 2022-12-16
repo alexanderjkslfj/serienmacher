@@ -17,7 +17,7 @@ class Test {
             if (result[0])
                 console.log(`✅ Success: Test "${this.name}" was successful.`)
             else
-                console.log(`❌ Error: Test "${this.name}" returned a wrong result:`)
+                console.log(`❌ Error: Test "${this.name}" returned a wrong result:`, result[1])
             return result[0]
         } catch (err) {
             console.log(`❌ Error: Test "${this.name}" returned an error:`, err)
