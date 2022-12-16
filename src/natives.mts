@@ -407,7 +407,7 @@ for (const object of natives) {
 
     for (const key of keys) {
         try {
-            const value = Object.getOwnPropertyDescriptor(object, key)?.value || object[key]
+            const value = Object.getOwnPropertyDescriptor(object, key)?.value
 
             if (["object", "function"].includes(typeof value) && value !== null)
                 natives.add(value)
