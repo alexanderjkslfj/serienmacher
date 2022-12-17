@@ -60,6 +60,10 @@ function parseComplex(value: (parsedObject | number)[]): object {
 
             const key = prop.key.symbol ? Symbol[prop.key.value] : prop.key.value
 
+            const existingDescriptor = Object.getOwnPropertyDescriptor(output[i], key)
+            if (existingDescriptor !== undefined && existingDescriptor.configurable === false)
+                continue
+
             const descriptor: PropertyDescriptor = {
                 configurable: prop.descriptor.configurable,
                 enumerable: prop.descriptor.enumerable
@@ -276,6 +280,30 @@ function findSymbol(symbol: symbol): string {
     return key
 }
 
-function parseFunctionString(str: string): CallableFunction {
-    return new Function(str)
+function parseFunctionString(str: string): CallableFunction | null {
+    const isClass = str.match(/^\s*class/) !== null
+
+    if (isClass) { // parse class using eval
+
+        let a: CallableFunction;
+
+        eval(`a = ${str}`)
+
+        return a
+
+    } else { // disassemble function to avoid using eval
+
+        // disassemble function
+        const paramstr = str.match(/(?<=^[^(]*\()[^)]*/)?.[0]
+        if (typeof paramstr !== "string")
+            return null
+        const params = [...paramstr.matchAll(/[^\s,]/g)].map(param => param[0])
+        const fun = str.match(/(?<=^[^{]*{)[^]*(?=}[^}]*$)/)?.[0]
+        if (typeof fun !== "string")
+            return null
+
+        // create and return function
+        return Function(...params, fun)
+
+    }
 }
