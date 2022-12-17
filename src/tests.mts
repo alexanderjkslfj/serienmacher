@@ -171,6 +171,36 @@ const tests: Test[] = [
         const objy = new y(3)
 
         return [objt.a === 3 && objt.a === objy.a, y]
+    }),
+    new Test("Normal Function", () => {
+        function a(b: number, c: number) {
+            return b + c
+        }
+
+        const x = stringify(a)
+        const y = parse(x)
+
+        return [y(1, 2) === 3, y]
+    }),
+    new Test("Anonymous Function", () => {
+        const a = function (b: number, c: number) {
+            return b + c
+        }
+
+        const x = stringify(a)
+        const y = parse(x)
+
+        return [y(1, 2) === 3, y]
+    }),
+    new Test("Arrow Function", () => {
+        const a = (b: number, c: number) => {
+            return b + c
+        }
+
+        const x = stringify(a)
+        const y = parse(x)
+
+        return [y(1, 2) === 3, y]
     })
 ];
 
