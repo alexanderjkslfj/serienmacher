@@ -137,7 +137,46 @@ const tests: Test[] = [
         const yVal = y(1, 2)
 
         return [aVal === 3 && aVal === yVal, yVal]
+    }),
+    new Test("Named Class", () => {
+        class test {
+            public a: number
+
+            constructor(b: number) {
+                this.a = b
+            }
+        }
+
+        const x = stringify(test)
+        const y = parse(x)
+
+        const objt = new test(3)
+        const objy = new y(3)
+
+        return [objt.a === 3 && objt.a === objy.a, y]
+    }),
+    new Test("Anonymous Class", () => {
+        const test = class {
+            public a: number
+
+            constructor(b: number) {
+                this.a = b
+            }
+        }
+
+        const x = stringify(test)
+        const y = parse(x)
+
+        const objt = new test(3)
+        const objy = new y(3)
+
+        return [objt.a === 3 && objt.a === objy.a, y]
     })
 ];
 
-Test.runTests(tests)
+Test.runTests(tests).then(success => {
+    console.log(success
+        ? "✅ All tests finished successfully."
+        : "❌ Some tests did not finish successfully."
+    )
+})
