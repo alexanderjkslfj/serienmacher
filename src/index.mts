@@ -43,7 +43,7 @@ export function serialize(something: any): string {
  * @param something Data to be deserialized.
  * @returns Deserialized data.
  */
-export function deserialize(something: string): any {
+export function deserialize<T>(something: string): T {
     const [type, value]: [valueType, any] = JSON.parse(something)
     return (type === valueType.COMPLEX)
         ? parseComplex(value)
