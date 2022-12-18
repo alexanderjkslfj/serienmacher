@@ -1,4 +1,4 @@
-import { stringify, parse } from "./index.mjs"
+import { serialize, deserialize } from "./index.mjs"
 
 type TestMethod = () => ([boolean, any] | Promise<[boolean, any]>)
 
@@ -37,19 +37,19 @@ class Test {
 
 const tests: Test[] = [
     new Test("Simple String", () => {
-        const x = parse(stringify("Hello World"))
+        const x = deserialize(serialize("Hello World"))
 
         return [x === "Hello World", x]
     }),
     new Test("Basic Object", () => {
-        const x = stringify({ a: 5 })
-        const y = parse(x)
+        const x = serialize({ a: 5 })
+        const y = deserialize(x)
 
         return [y?.a === 5, y]
     }),
     new Test("Basic Object with String", () => {
-        const x = stringify({ a: "b" })
-        const y = parse(x)
+        const x = serialize({ a: "b" })
+        const y = deserialize(x)
 
         return [y?.a === "b", y]
     }),
@@ -57,8 +57,8 @@ const tests: Test[] = [
         const a = { a: {} }
         a.a = a
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         return [y?.a?.a?.a?.a?.a === y, y]
     }),
@@ -67,7 +67,7 @@ const tests: Test[] = [
         const b = { a: a }
         a.b = b
 
-        const x = parse(stringify(a))
+        const x = deserialize(serialize(a))
 
         return [x?.b?.a?.b?.a === x, x]
     }),
@@ -82,24 +82,24 @@ const tests: Test[] = [
 
         const b = new a()
 
-        const c = stringify(b)
-        const d = parse(c)
+        const c = serialize(b)
+        const d = deserialize(c)
 
         return [b.b === d?.b, d]
     }),
     new Test("Array Values", () => {
         const a = ["a", "b", "c"]
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         return [a.length === y?.length, y]
     }),
     new Test("Array Constructor Methods", () => {
         const a = ["a", "b", "c"]
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         y?.constructor?.prototype?.push?.apply?.(y, ["d"])
 
@@ -108,8 +108,8 @@ const tests: Test[] = [
     new Test("Array Inherited Methods", () => {
         const a = ["a", "b", "c"]
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         y?.push?.("d")
 
@@ -120,8 +120,8 @@ const tests: Test[] = [
 
         }
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         return [a.name === y?.name, y]
     }),
@@ -130,8 +130,8 @@ const tests: Test[] = [
             return n + m
         }
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         const aVal = a(1, 2)
         const yVal = y(1, 2)
@@ -147,8 +147,8 @@ const tests: Test[] = [
             }
         }
 
-        const x = stringify(test)
-        const y = parse(x)
+        const x = serialize(test)
+        const y = deserialize(x)
 
         const objt = new test(3)
         const objy = new y(3)
@@ -164,8 +164,8 @@ const tests: Test[] = [
             }
         }
 
-        const x = stringify(test)
-        const y = parse(x)
+        const x = serialize(test)
+        const y = deserialize(x)
 
         const objt = new test(3)
         const objy = new y(3)
@@ -177,8 +177,8 @@ const tests: Test[] = [
             return b + c
         }
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     }),
@@ -187,8 +187,8 @@ const tests: Test[] = [
             return b + c
         }
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     }),
@@ -197,8 +197,8 @@ const tests: Test[] = [
             return b + c
         }
 
-        const x = stringify(a)
-        const y = parse(x)
+        const x = serialize(a)
+        const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     })
