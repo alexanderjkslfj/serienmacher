@@ -58,7 +58,7 @@ export function deserialize(something: string): any {
  * @param value 
  * @returns 
  */
-function parseBasic(type: valueType, value: string): string | number | boolean | symbol | bigint {
+function parseBasic(type: valueType, value: string): any {
     switch (type) {
         case valueType.JSONREADY:
             return JSON.parse(value)
@@ -79,20 +79,18 @@ function parseBasic(type: valueType, value: string): string | number | boolean |
  * @param basic
  * @returns string describing the data
  */
-function serializeBasic(type: valueType, basic: string | number | boolean | symbol | bigint): string {
+function serializeBasic(type: valueType, basic: any): string {
     switch (type) {
         case valueType.JSONREADY:
             return JSON.stringify(basic)
         case valueType.BIGINT:
             return basic.toString()
         case valueType.SYMBOL:
-            //@ts-ignore
             return findSymbol(basic)
         case valueType.UNDEFINED:
             return ""
         case valueType.NATIVE:
-            //@ts-ignore
-            return natives[basic]
+            return basic
     }
     console.error("Invalid parameter passed to basic2str:", basic)
     throw "ParameterError"
@@ -300,8 +298,14 @@ function getValueType(value: unknown): valueType {
             return valueType.SYMBOL
         case "undefined":
             return valueType.UNDEFINED
-        default:
-            return valueType.COMPLEX
+        default: {
+            // @ts-ignore
+            const isNative = findNativeIndex(value) !== -1
+
+            return isNative
+                ? valueType.NATIVE
+                : valueType.COMPLEX
+        }
     }
 
 }
