@@ -51,10 +51,8 @@ export function serialize(something: any): string {
 export function deserialize(something: string): any {
     const [type, value]: [valueType, string | (serializedObject | number)[]] = JSON.parse(something)
     return (type === valueType.COMPLEX)
-        // @ts-ignore
-        ? parseComplex(value)
-        // @ts-ignore
-        : parseBasic(type, value)
+        ? parseComplex(value as (serializedObject | number)[])
+        : parseBasic(type, value as string)
 }
 
 /**
@@ -134,8 +132,7 @@ function parseComplex(value: (serializedObject | number)[]): object {
         if (typeof input[i] === "number")
             continue
 
-        //@ts-ignore
-        for (const prop of input[i].props) {
+        for (const prop of (input[i] as serializedObject).props) {
 
             const key = prop.key.symbol ? Symbol[prop.key.value] : prop.key.value
 
@@ -149,30 +146,24 @@ function parseComplex(value: (serializedObject | number)[]): object {
             }
 
             if (prop.descriptor.set !== -1)
-                //@ts-ignore
-                descriptor.set = output[prop.descriptor.set]
+                descriptor.set = output[prop.descriptor.set] as () => any
 
             if (prop.descriptor.get !== -1)
-                //@ts-ignore
-                descriptor.get = output[prop.descriptor.get]
+                descriptor.get = output[prop.descriptor.get] as () => any
 
             if (prop.descriptor.set === -1 && prop.descriptor.get === -1) {
                 descriptor.writable = prop.descriptor.writable
                 descriptor.value = (prop.type === valueType.COMPLEX)
                     ? output[prop.descriptor.value]
-                    //@ts-ignore
-                    : parseBasic(prop.type, prop.descriptor.value)
+                    : parseBasic(prop.type, prop.descriptor.value as string)
             }
 
             Object.defineProperty(output[i], key, descriptor)
         }
 
-        //@ts-ignore
-        Object.setPrototypeOf(output[i], (input[i].proto.native)
-            //@ts-ignore
-            ? natives[input[i].proto.index]
-            //@ts-ignore
-            : output[input[i].proto.index]
+        Object.setPrototypeOf(output[i], ((input[i] as serializedObject).proto.native)
+            ? natives[(input[i] as serializedObject).proto.index]
+            : output[(input[i] as serializedObject).proto.index]
         )
     }
 
@@ -223,8 +214,7 @@ function serializeComplex(complex: object): (serializedObject | number)[] {
 
         const p: serializedObject = {
             type: type,
-            //@ts-ignore
-            fun: (type === objectType.FUNCTION) ? getFunctionString(current) : null,
+            fun: (type === objectType.FUNCTION) ? getFunctionString(current as CallableFunction) : null,
             proto: {
                 native: nativeProto,
                 index: protoIndex
@@ -304,8 +294,7 @@ function getValueType(value: unknown): valueType {
         case "undefined":
             return valueType.UNDEFINED
         default: {
-            // @ts-ignore
-            const isNative = findNativeIndex(value) !== -1
+            const isNative = findNativeIndex(value as object) !== -1
 
             return isNative
                 ? valueType.NATIVE
