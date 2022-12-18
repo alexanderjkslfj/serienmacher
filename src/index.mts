@@ -38,13 +38,64 @@ type TypedBasic<T> =
                     (null | string | number | boolean)))))
 
 /**
- * List of serialized objects and native indexes. Used to represent a serialized complex object
+ * List of serialized objects and native indexes.
  */
 type serializedList = (serializedObject | number)[]
 
+/**
+ * Representation of a serialized complex object.
+ * Contains a list of serialized and native objects as well as a list of symbol descriptions
+ */
 type serializedComplex = {
     objects: serializedList,
     symbols: (string | null)[]
+}
+
+/**
+ * A complex object in serialized form
+ */
+type serializedObject = {
+    type: objectType,
+    fun: string | null,
+    proto: proto,
+    props: property[]
+}
+
+/**
+ * Index of the prototype and whether it's native
+ */
+type proto = {
+    native: boolean,
+    index: number
+}
+
+/**
+ * Data of an object property
+ */
+type property = {
+    key: propkey,
+    type: valueType,
+    descriptor: propertyDescriptor
+}
+
+type propkey = {
+    type: keyType.STRING | keyType.NATIVE_SYMBOL,
+    value: string
+} | {
+    type: keyType.CUSTOM_SYMBOL,
+    value: number
+}
+
+/**
+ * Descriptor of an object property
+ */
+type propertyDescriptor = {
+    configurable: boolean,
+    writable: boolean,
+    enumerable: boolean,
+    value: string | number,
+    get: number,
+    set: number
 }
 
 /**
@@ -55,7 +106,7 @@ type serializedComplex = {
  *      - Workers
  *      - etc.
  * 
- * Warning: Everything (except native objects) will be serialized, as deep as possible. This can lead to huge strings of data, even for small objects.
+ * Warning: Everything (except native objects) will be serialized, as deep and exact as possible. This can lead to huge strings of data, even for small objects.
  * @param something Data to be serialized.
  * @returns Data serialized as a string.
  */
@@ -428,53 +479,6 @@ function getValueType(value: unknown): valueType {
         }
     }
 
-}
-
-/**
- * A complex object in serialized form
- */
-type serializedObject = {
-    type: objectType,
-    fun: string | null,
-    proto: proto,
-    props: property[]
-}
-
-/**
- * Index of the prototype and whether it's native
- */
-type proto = {
-    native: boolean,
-    index: number
-}
-
-/**
- * Data of an object property
- */
-type property = {
-    key: propkey,
-    type: valueType,
-    descriptor: propertyDescriptor
-}
-
-type propkey = {
-    type: keyType.STRING | keyType.NATIVE_SYMBOL,
-    value: string
-} | {
-    type: keyType.CUSTOM_SYMBOL,
-    value: number
-}
-
-/**
- * Descriptor of an object property
- */
-type propertyDescriptor = {
-    configurable: boolean,
-    writable: boolean,
-    enumerable: boolean,
-    value: string | number,
-    get: number,
-    set: number
 }
 
 /**
