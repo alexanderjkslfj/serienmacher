@@ -50,7 +50,6 @@ type serializedComplex = {
 /**
  * Serialize data. Supports everything except:
  *  - non-pure functions
- *  - non-native symbols
  *  - objects relying on fundamentally non-serializable things:
  *      - Blobs
  *      - Workers
@@ -234,31 +233,33 @@ function serializeComplex(complex: object): serializedComplex {
 
     /**
      * Get the index of an object. If necessary, add it to the array.
-     * @param object the object to find (any maybe add)
+     * @param object the object to find (and maybe add)
      * @returns the index of the object
      */
     function findOrAddObject(object: object): number {
-
-        // get index of object
-        const valueIndex = objects.findIndex(o => o === object)
-
-        // check whether the object exists in the array
-        if (valueIndex === -1) {
-            // add the object to the array and return its index
-            objects.push(object)
-            return objects.length - 1
-        } else {
-            // return the index of the object
-            return valueIndex
-        }
+        return findOrAdd(objects, object)
     }
 
+    /**
+     * Get the index of a symbol. If necessary, add it to the array.
+     * @param sym the symbol to find (and maybe add)
+     * @returns the index of the symbol
+     */
     function findOrAddSymbol(sym: symbol): number {
-        const valueIndex = symbols.findIndex(s => s === sym)
+        return findOrAdd(symbols, sym)
+    }
+
+    /**
+     * Get the index of a value. If necessary, add it to the array.
+     * @param value the value to find (and maybe add)
+     * @returns the index of the value
+     */
+    function findOrAdd<T>(list: T[], value: T): number {
+        const valueIndex = list.findIndex(v => v === value)
 
         if (valueIndex === -1) {
-            symbols.push(sym)
-            return symbols.length - 1
+            list.push(value)
+            return list.length - 1
         }
 
         return valueIndex
