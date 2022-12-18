@@ -98,6 +98,11 @@ function serializeBasic(type: valueType, basic: string | number | boolean | symb
     throw "ParameterError"
 }
 
+/**
+ * Parse complex data
+ * @param value 
+ * @returns 
+ */
 function parseComplex(value: (serializedObject | number)[]): object {
     const input = value
     const output: object[] = []
@@ -171,53 +176,11 @@ function parseComplex(value: (serializedObject | number)[]): object {
     return output[0]
 }
 
-function getValueType(value: any): valueType {
-    if (value === null || ["string", "number", "boolean"].includes(typeof value))
-        return valueType.JSONREADY
-
-    switch (typeof value) {
-        case "bigint":
-            return valueType.BIGINT
-        case "symbol":
-            return valueType.SYMBOL
-        case "undefined":
-            return valueType.UNDEFINED
-        default:
-            return valueType.COMPLEX
-    }
-
-}
-
-type serializedObject = {
-    type: objectType,
-    fun: string | null,
-    proto: proto,
-    props: property[]
-}
-
-type proto = {
-    native: boolean,
-    index: number
-}
-
-type property = {
-    key: {
-        symbol: boolean
-        value: string
-    },
-    type: valueType,
-    descriptor: propertyDescriptor
-}
-
-type propertyDescriptor = {
-    configurable: boolean,
-    writable: boolean,
-    enumerable: boolean,
-    value: string | number,
-    get: number,
-    set: number
-}
-
+/**
+ * Serialize complex data
+ * @param complex 
+ * @returns 
+ */
 function serializeComplex(complex: object): (serializedObject | number)[] {
     const parsed: (serializedObject | number)[] = []
     const objects: object[] = [complex]
@@ -321,19 +284,95 @@ function serializeComplex(complex: object): (serializedObject | number)[] {
 
 }
 
+/**
+ * Check which type of value the given value is
+ * @param value value to check type of
+ * @returns type of value
+ */
+function getValueType(value: unknown): valueType {
+    if (value === null || ["string", "number", "boolean"].includes(typeof value))
+        return valueType.JSONREADY
+
+    switch (typeof value) {
+        case "bigint":
+            return valueType.BIGINT
+        case "symbol":
+            return valueType.SYMBOL
+        case "undefined":
+            return valueType.UNDEFINED
+        default:
+            return valueType.COMPLEX
+    }
+
+}
+
+/**
+ * A complex object in serialized form
+ */
+type serializedObject = {
+    type: objectType,
+    fun: string | null,
+    proto: proto,
+    props: property[]
+}
+
+/**
+ * Index of the prototype and whether it's native
+ */
+type proto = {
+    native: boolean,
+    index: number
+}
+
+/**
+ * Data of an object property
+ */
+type property = {
+    key: {
+        symbol: boolean
+        value: string
+    },
+    type: valueType,
+    descriptor: propertyDescriptor
+}
+
+/**
+ * Descriptor of an object property
+ */
+type propertyDescriptor = {
+    configurable: boolean,
+    writable: boolean,
+    enumerable: boolean,
+    value: string | number,
+    get: number,
+    set: number
+}
+
+/**
+ * Find index of object in natives array
+ * @param object the object to find the index of
+ * @returns the index of the object or -1 if it's not found
+ */
 function findNativeIndex(object: object): number {
     return natives.findIndex((native: object) => native === object)
 }
 
-function getFunctionString(object: CallableFunction): string {
-    return object.toString()
-}
-
+/**
+ * Get native name of symbol
+ * @param symbol the symbol to find the native name of
+ * @returns the native name of the symbol
+ */
 function tryFindSymbol(symbol: symbol): string | null {
     const key = Object.getOwnPropertyNames(Symbol).find(value => Symbol[value] === symbol)
     return (key === undefined) ? null : key
 }
 
+/**
+ * Get native name of symbol
+ * @param symbol the symbol to find the native name of
+ * @returns the native name of the symbol
+ * @throws if the symbol does not exist in the native Symbol object
+ */
 function findSymbol(symbol: symbol): string {
     const key = Object.getOwnPropertyNames(Symbol).find(value => Symbol[value] === symbol)
     if (key === undefined)
@@ -341,30 +380,50 @@ function findSymbol(symbol: symbol): string {
     return key
 }
 
+/**
+ * Stringify a function or class
+ * @param object function or class to stringify
+ * @returns a string representing the function or class
+ */
+function getFunctionString(object: CallableFunction): string {
+    return object.toString()
+}
+
+/**
+ * Turn a stringified function or class into an object
+ * @param str stringified function or class
+ * @returns a function or class (null on parsing error)
+ */
 function parseFunctionString(str: string): CallableFunction | null {
     const isClass = str.match(/^\s*class/) !== null
 
-    if (isClass) { // parse class using eval
+    try {
 
-        let a: CallableFunction;
+        if (isClass) { // parse class using eval
 
-        eval(`a = ${str}`)
+            let a: CallableFunction;
 
-        return a
+            eval(`a = ${str}`)
 
-    } else { // disassemble function to avoid using eval
+            return a
 
-        // disassemble function
-        const paramstr = str.match(/(?<=^[^(]*\()[^)]*/)?.[0]
-        if (typeof paramstr !== "string")
-            return null
-        const params = [...paramstr.matchAll(/[^\s,]/g)].map(param => param[0])
-        const fun = str.match(/(?<=^[^{]*{)[^]*(?=}[^}]*$)/)?.[0]
-        if (typeof fun !== "string")
-            return null
+        } else { // disassemble function to avoid using eval
 
-        // create and return function
-        return Function(...params, fun)
+            // disassemble function
+            const paramstr = str.match(/(?<=^[^(]*\()[^)]*/)?.[0]
+            if (typeof paramstr !== "string")
+                return null
+            const params = [...paramstr.matchAll(/[^\s,]/g)].map(param => param[0])
+            const fun = str.match(/(?<=^[^{]*{)[^]*(?=}[^}]*$)/)?.[0]
+            if (typeof fun !== "string")
+                return null
 
+            // create and return function
+            return Function(...params, fun)
+
+        }
+
+    } catch {
+        return null
     }
 }
