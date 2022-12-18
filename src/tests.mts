@@ -201,6 +201,12 @@ const tests: Test[] = [
         const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
+    }),
+    new Test("True Native", () => {
+        const x = serialize(Object)
+        const y = deserialize(x)
+
+        return [x === y, y]
     })
 ];
 
