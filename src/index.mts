@@ -22,6 +22,21 @@ enum objectType {
 }
 
 /**
+ * A basic value, relative to its valueType
+ */
+type TypedBasic<T> =
+    (T extends valueType.NATIVE ? object :
+        (T extends valueType.BIGINT ? bigint :
+            (T extends valueType.SYMBOL ? symbol :
+                (T extends valueType.UNDEFINED ? undefined :
+                    (null | string | number | boolean)))))
+
+/**
+ * List of serialized objects and native indexes. Used to represent a serialized complex object
+ */
+type serializedList = (serializedObject | number)[]
+
+/**
  * Serialize data. Supports everything except:
  *  - non-pure functions
  *  - non-native symbols
@@ -49,18 +64,13 @@ export function serialize(something: any): string {
  * @returns Deserialized data.
  */
 export function deserialize(something: string): any {
-    const [type, value]: [valueType, string | serializedList] = JSON.parse(something)
+    const [type, value]: [valueType, string | serializedList]
+        = JSON.parse(something)
+
     return (type === valueType.COMPLEX)
         ? parseComplex(value as serializedList)
         : parseBasic(type, value as string)
 }
-
-type TypedBasic<T> =
-    (T extends valueType.NATIVE ? object :
-        (T extends valueType.BIGINT ? bigint :
-            (T extends valueType.SYMBOL ? symbol :
-                (T extends valueType.UNDEFINED ? undefined :
-                    (null | string | number | boolean)))))
 
 /**
  * Parse basic data
@@ -74,6 +84,7 @@ function parseBasic<T extends valueType>(type: T, value: string): TypedBasic<T> 
             return JSON.parse(value)
         case valueType.BIGINT:
             // @ts-ignore
+            // TODO: Why does this require a ts-ignore??
             return BigInt(value)
         case valueType.SYMBOL:
             return Symbol[value]
@@ -103,11 +114,10 @@ function serializeBasic<T extends valueType>(type: T, basic: TypedBasic<T>): str
         case valueType.NATIVE:
             return findNativeIndex(basic as object).toString()
     }
+
     console.error("Invalid parameter passed to basic2str:", basic)
     throw "ParameterError"
 }
-
-type serializedList = (serializedObject | number)[]
 
 /**
  * Parse complex data
