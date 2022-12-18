@@ -55,17 +55,25 @@ export function deserialize(something: string): any {
         : parseBasic(type, value as string)
 }
 
+type TypedBasic<T> =
+    (T extends valueType.NATIVE ? object :
+        (T extends valueType.BIGINT ? bigint :
+            (T extends valueType.SYMBOL ? symbol :
+                (T extends valueType.UNDEFINED ? undefined :
+                    (null | string | number | boolean)))))
+
 /**
  * Parse basic data
  * @param type type of data (which method to use for parsing)
  * @param value 
  * @returns 
  */
-function parseBasic(type: valueType, value: string): any {
+function parseBasic<T extends valueType>(type: T, value: string): TypedBasic<T> {
     switch (type) {
         case valueType.JSONREADY:
             return JSON.parse(value)
         case valueType.BIGINT:
+            // @ts-ignore
             return BigInt(value)
         case valueType.SYMBOL:
             return Symbol[value]
@@ -82,18 +90,18 @@ function parseBasic(type: valueType, value: string): any {
  * @param basic
  * @returns string describing the data
  */
-function serializeBasic(type: valueType, basic: any): string {
+function serializeBasic<T extends valueType>(type: T, basic: TypedBasic<T>): string {
     switch (type) {
         case valueType.JSONREADY:
             return JSON.stringify(basic)
         case valueType.BIGINT:
             return basic.toString()
         case valueType.SYMBOL:
-            return findSymbol(basic)
+            return findSymbol(basic as symbol)
         case valueType.UNDEFINED:
             return ""
         case valueType.NATIVE:
-            return findNativeIndex(basic).toString()
+            return findNativeIndex(basic as object).toString()
     }
     console.error("Invalid parameter passed to basic2str:", basic)
     throw "ParameterError"
