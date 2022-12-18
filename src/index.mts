@@ -49,9 +49,9 @@ export function serialize(something: any): string {
  * @returns Deserialized data.
  */
 export function deserialize(something: string): any {
-    const [type, value]: [valueType, string | (serializedObject | number)[]] = JSON.parse(something)
+    const [type, value]: [valueType, string | serializedList] = JSON.parse(something)
     return (type === valueType.COMPLEX)
-        ? parseComplex(value as (serializedObject | number)[])
+        ? parseComplex(value as serializedList)
         : parseBasic(type, value as string)
 }
 
@@ -107,12 +107,14 @@ function serializeBasic<T extends valueType>(type: T, basic: TypedBasic<T>): str
     throw "ParameterError"
 }
 
+type serializedList = (serializedObject | number)[]
+
 /**
  * Parse complex data
  * @param value 
  * @returns 
  */
-function parseComplex(value: (serializedObject | number)[]): object {
+function parseComplex(value: serializedList): object {
     const input = value
     const output: object[] = []
 
@@ -183,8 +185,8 @@ function parseComplex(value: (serializedObject | number)[]): object {
  * @param complex 
  * @returns 
  */
-function serializeComplex(complex: object): (serializedObject | number)[] {
-    const parsed: (serializedObject | number)[] = []
+function serializeComplex(complex: object): serializedList {
+    const parsed: serializedList = []
     const objects: object[] = [complex]
 
     function findOrAddObject(object: object): number {
