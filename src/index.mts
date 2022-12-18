@@ -25,7 +25,12 @@ enum objectType {
  * Serialize data. Supports everything except:
  *  - non-pure functions
  *  - non-native symbols
- * Warning: Everything except native attributes is cloned. This can lead to huge strings of data, even for small objects.
+ *  - objects relying on fundamentally non-serializable things:
+ *      - Blobs
+ *      - Workers
+ *      - etc.
+ * 
+ * Warning: Everything (except native objects) will be serialized, as deep as possible. This can lead to huge strings of data, even for small objects.
  * @param something Data to be serialized.
  * @returns Data serialized as a string.
  */
