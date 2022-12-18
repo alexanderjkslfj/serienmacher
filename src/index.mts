@@ -21,6 +21,12 @@ enum objectType {
     ARRAY
 }
 
+enum keyType {
+    STRING,
+    NATIVE_SYMBOL,
+    CUSTOM_SYMBOL
+}
+
 /**
  * A basic value, relative to its valueType
  */
@@ -35,6 +41,11 @@ type TypedBasic<T> =
  * List of serialized objects and native indexes. Used to represent a serialized complex object
  */
 type serializedList = (serializedObject | number)[]
+
+type serializedComplex = {
+    objects: serializedList,
+    symbols: (string | null)[]
+}
 
 /**
  * Serialize data. Supports everything except:
@@ -64,11 +75,11 @@ export function serialize(something: any): string {
  * @returns Deserialized data.
  */
 export function deserialize(something: string): any {
-    const [type, value]: [valueType, string | serializedList]
+    const [type, value]: [valueType, string | serializedComplex]
         = JSON.parse(something)
 
     return (type === valueType.COMPLEX)
-        ? parseComplex(value as serializedList)
+        ? parseComplex(value as serializedComplex)
         : parseBasic(type, value as string)
 }
 
@@ -84,10 +95,10 @@ function parseBasic<T extends valueType>(type: T, value: string): TypedBasic<T> 
             return JSON.parse(value)
         case valueType.BIGINT:
             // @ts-ignore
-            // TODO: Why does this require a ts-ignore??
             return BigInt(value)
         case valueType.SYMBOL:
-            return Symbol[value]
+            // @ts-ignore
+            return Symbol.for(value)
         case valueType.UNDEFINED:
             return undefined
         case valueType.NATIVE:
@@ -108,7 +119,7 @@ function serializeBasic<T extends valueType>(type: T, basic: TypedBasic<T>): str
         case valueType.BIGINT:
             return basic.toString()
         case valueType.SYMBOL:
-            return findSymbol(basic as symbol)
+            return Symbol.keyFor(basic as symbol)
         case valueType.UNDEFINED:
             return ""
         case valueType.NATIVE:
@@ -124,9 +135,18 @@ function serializeBasic<T extends valueType>(type: T, basic: TypedBasic<T>): str
  * @param value 
  * @returns 
  */
-function parseComplex(value: serializedList): object {
-    const input = value
+function parseComplex(value: serializedComplex): object {
+    const input = value.objects
     const output: object[] = []
+    const symbols: symbol[] = []
+
+    // construct symbols
+    for (const desc of value.symbols) {
+        symbols.push((desc === null)
+            ? Symbol()
+            : Symbol(desc)
+        )
+    }
 
     // construct objects
     for (const object of input) {
@@ -156,7 +176,17 @@ function parseComplex(value: serializedList): object {
 
         for (const prop of (input[i] as serializedObject).props) {
 
-            const key = prop.key.symbol ? Symbol[prop.key.value] : prop.key.value
+            let key: string | symbol
+            switch (prop.key.type) {
+                case keyType.STRING:
+                    key = prop.key.value
+                    break
+                case keyType.NATIVE_SYMBOL:
+                    key = Symbol.for(prop.key.value)
+                    break
+                case keyType.CUSTOM_SYMBOL:
+                    key = symbols[prop.key.value]
+            }
 
             const existingDescriptor = Object.getOwnPropertyDescriptor(output[i], key)
             if (existingDescriptor !== undefined && existingDescriptor.configurable === false)
@@ -197,9 +227,10 @@ function parseComplex(value: serializedList): object {
  * @param complex 
  * @returns 
  */
-function serializeComplex(complex: object): serializedList {
+function serializeComplex(complex: object): serializedComplex {
     const parsed: serializedList = []
     const objects: object[] = [complex]
+    const symbols: symbol[] = []
 
     /**
      * Get the index of an object. If necessary, add it to the array.
@@ -209,7 +240,7 @@ function serializeComplex(complex: object): serializedList {
     function findOrAddObject(object: object): number {
 
         // get index of object
-        let valueIndex = objects.findIndex(o => o === object)
+        const valueIndex = objects.findIndex(o => o === object)
 
         // check whether the object exists in the array
         if (valueIndex === -1) {
@@ -220,6 +251,17 @@ function serializeComplex(complex: object): serializedList {
             // return the index of the object
             return valueIndex
         }
+    }
+
+    function findOrAddSymbol(sym: symbol): number {
+        const valueIndex = symbols.findIndex(s => s === sym)
+
+        if (valueIndex === -1) {
+            symbols.push(sym)
+            return symbols.length - 1
+        }
+
+        return valueIndex
     }
 
     // iterate over the objects (including dynamically added ones)
@@ -268,11 +310,22 @@ function serializeComplex(complex: object): serializedList {
         for (const key of Reflect.ownKeys(current)) {
             const rawDescriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(current, key)!
 
-            const symbolName = (typeof key === "symbol") ? tryFindSymbol(key) : ""
+            let keyt: keyType
 
-            // if the key is a non-native symbol, skip it
-            if (symbolName === null)
-                continue
+            let keyIndex: number | string | null = null
+
+            if (typeof key === "string") {
+                keyt = keyType.STRING
+            } else {
+                keyIndex = Symbol.keyFor(key)
+
+                if (keyIndex === undefined) {
+                    keyIndex = findOrAddSymbol(key)
+                    keyt = keyType.CUSTOM_SYMBOL
+                } else {
+                    keyt = keyType.NATIVE_SYMBOL
+                }
+            }
 
             const getter = rawDescriptor.get
             const setter = rawDescriptor.set
@@ -309,12 +362,30 @@ function serializeComplex(complex: object): serializedList {
                     : -1
             }
 
+            let keyprop: propkey
+            switch (keyt) {
+                case keyType.CUSTOM_SYMBOL:
+                    keyprop = {
+                        type: keyType.CUSTOM_SYMBOL,
+                        value: keyIndex as number
+                    }
+                    break
+                case keyType.NATIVE_SYMBOL:
+                    keyprop = {
+                        type: keyType.NATIVE_SYMBOL,
+                        value: keyIndex as string
+                    }
+                    break
+                case keyType.STRING:
+                    keyprop = {
+                        type: keyType.STRING,
+                        value: key as string
+                    }
+            }
+
             // add the serialized property to the serialized object
             p.props.push({
-                key: {
-                    symbol: typeof key === "symbol",
-                    value: (typeof key === "symbol") ? findSymbol(key) : key
-                },
+                key: keyprop,
                 type: type,
                 descriptor: descriptor
             })
@@ -324,7 +395,10 @@ function serializeComplex(complex: object): serializedList {
         parsed.push(p)
     }
 
-    return parsed
+    return {
+        objects: parsed,
+        symbols: symbols.map(sym => sym.description ?? null) as (string | null)[]
+    }
 
 }
 
@@ -377,12 +451,17 @@ type proto = {
  * Data of an object property
  */
 type property = {
-    key: {
-        symbol: boolean
-        value: string
-    },
+    key: propkey,
     type: valueType,
     descriptor: propertyDescriptor
+}
+
+type propkey = {
+    type: keyType.STRING | keyType.NATIVE_SYMBOL,
+    value: string
+} | {
+    type: keyType.CUSTOM_SYMBOL,
+    value: number
 }
 
 /**
@@ -404,29 +483,6 @@ type propertyDescriptor = {
  */
 function findNativeIndex(object: object): number {
     return natives.findIndex((native: object) => native === object)
-}
-
-/**
- * Get native name of symbol
- * @param symbol the symbol to find the native name of
- * @returns the native name of the symbol
- */
-function tryFindSymbol(symbol: symbol): string | null {
-    const key = Object.getOwnPropertyNames(Symbol).find(value => Symbol[value] === symbol)
-    return (key === undefined) ? null : key
-}
-
-/**
- * Get native name of symbol
- * @param symbol the symbol to find the native name of
- * @returns the native name of the symbol
- * @throws if the symbol does not exist in the native Symbol object
- */
-function findSymbol(symbol: symbol): string {
-    const key = Object.getOwnPropertyNames(Symbol).find(value => Symbol[value] === symbol)
-    if (key === undefined)
-        throw "Unknown symbol"
-    return key
 }
 
 /**
