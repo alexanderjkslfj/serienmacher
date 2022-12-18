@@ -1,5 +1,8 @@
 import natives from "./natives.mjs"
 
+/**
+ * Types of values (which may use different methods for serialization/deserialization)
+ */
 enum valueType {
     JSONREADY,
     COMPLEX,
@@ -9,13 +12,24 @@ enum valueType {
     NATIVE
 }
 
+/**
+ * Types of complex objects
+ */
 enum objectType {
     NORMAL,
     FUNCTION,
     ARRAY
 }
 
-export function stringify(something: any): string {
+/**
+ * Serialize data. Supports everything except:
+ *  - non-pure functions
+ *  - non-native symbols
+ * Warning: Everything except native attributes is cloned. This can lead to huge strings of data, even for small objects.
+ * @param something Data to be serialized.
+ * @returns Data serialized as a string.
+ */
+export function serialize(something: any): string {
     const type = getValueType(something)
 
     return JSON.stringify([type, (type === valueType.COMPLEX)
@@ -24,7 +38,12 @@ export function stringify(something: any): string {
     ])
 }
 
-export function parse(something: string): any {
+/**
+ * Deserialize data.
+ * @param something Data to be deserialized.
+ * @returns Deserialized data.
+ */
+export function deserialize(something: string): any {
     const [type, value]: [valueType, any] = JSON.parse(something)
     return (type === valueType.COMPLEX)
         ? parseComplex(value)
