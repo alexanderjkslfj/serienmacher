@@ -207,6 +207,25 @@ const tests: Test[] = [
         const y = deserialize(x)
 
         return [Object === y, y]
+    }),
+    new Test("Non-pure Function", () => {
+        let aaa = 5
+        const b = () => {
+            aaa += 5
+        }
+
+        const x = serialize(b)
+        const y = deserialize(x)
+
+        let error: any = null
+
+        try {
+            y()
+        } catch (err) {
+            error = err
+        }
+
+        return [error instanceof ReferenceError, error]
     })
 ];
 
