@@ -26,7 +26,7 @@ export function stringify(something: any): string {
 
 export function parse(something: string): any {
     const [type, value] = JSON.parse(something)
-    return (type === 1)
+    return (type === valueType.COMPLEX)
         ? parseComplex(value)
         : parseBasic(type, value)
 }
