@@ -43,7 +43,7 @@ export function serialize(something: any): string {
  * @param something Data to be deserialized.
  * @returns Deserialized data.
  */
-export function deserialize<T>(something: string): T {
+export function deserialize(something: string): any {
     const [type, value]: [valueType, string | (serializedObject | number)[]] = JSON.parse(something)
     return (type === valueType.COMPLEX)
         // @ts-ignore
@@ -52,7 +52,13 @@ export function deserialize<T>(something: string): T {
         : parseBasic(type, value)
 }
 
-function parseBasic(type: valueType, value: string): any {
+/**
+ * Parse basic data
+ * @param type type of data (which method to use for parsing)
+ * @param value 
+ * @returns 
+ */
+function parseBasic(type: valueType, value: string): string | number | boolean | symbol | bigint {
     switch (type) {
         case valueType.JSONREADY:
             return JSON.parse(value)
@@ -65,6 +71,31 @@ function parseBasic(type: valueType, value: string): any {
         case valueType.NATIVE:
             return natives[value]
     }
+}
+
+/**
+ * Serialize basic data
+ * @param type type of data (which method to use for serialization)
+ * @param basic
+ * @returns string describing the data
+ */
+function serializeBasic(type: valueType, basic: string | number | boolean | symbol | bigint): string {
+    switch (type) {
+        case valueType.JSONREADY:
+            return JSON.stringify(basic)
+        case valueType.BIGINT:
+            return basic.toString()
+        case valueType.SYMBOL:
+            //@ts-ignore
+            return findSymbol(basic)
+        case valueType.UNDEFINED:
+            return ""
+        case valueType.NATIVE:
+            //@ts-ignore
+            return natives[basic]
+    }
+    console.error("Invalid parameter passed to basic2str:", basic)
+    throw "ParameterError"
 }
 
 function parseComplex(value: (serializedObject | number)[]): object {
@@ -138,25 +169,6 @@ function parseComplex(value: (serializedObject | number)[]): object {
     }
 
     return output[0]
-}
-
-function serializeBasic(type: valueType, basic: string | number | boolean | symbol | bigint): string {
-    switch (type) {
-        case valueType.JSONREADY:
-            return JSON.stringify(basic)
-        case valueType.BIGINT:
-            return basic.toString()
-        case valueType.SYMBOL:
-            //@ts-ignore
-            return findSymbol(basic)
-        case valueType.UNDEFINED:
-            return ""
-        case valueType.NATIVE:
-            //@ts-ignore
-            return natives[basic]
-    }
-    console.error("Invalid parameter passed to basic2str:", basic)
-    throw "ParameterError"
 }
 
 function getValueType(value: any): valueType {

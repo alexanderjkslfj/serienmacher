@@ -37,19 +37,19 @@ class Test {
 
 const tests: Test[] = [
     new Test("Simple String", () => {
-        const x = deserialize<any>(serialize("Hello World"))
+        const x = deserialize(serialize("Hello World"))
 
         return [x === "Hello World", x]
     }),
     new Test("Basic Object", () => {
         const x = serialize({ a: 5 })
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         return [y?.a === 5, y]
     }),
     new Test("Basic Object with String", () => {
         const x = serialize({ a: "b" })
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         return [y?.a === "b", y]
     }),
@@ -58,7 +58,7 @@ const tests: Test[] = [
         a.a = a
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         return [y?.a?.a?.a?.a?.a === y, y]
     }),
@@ -67,7 +67,7 @@ const tests: Test[] = [
         const b = { a: a }
         a.b = b
 
-        const x = deserialize<any>(serialize(a))
+        const x = deserialize(serialize(a))
 
         return [x?.b?.a?.b?.a === x, x]
     }),
@@ -83,7 +83,7 @@ const tests: Test[] = [
         const b = new a()
 
         const c = serialize(b)
-        const d = deserialize<any>(c)
+        const d = deserialize(c)
 
         return [b.b === d?.b, d]
     }),
@@ -91,7 +91,7 @@ const tests: Test[] = [
         const a = ["a", "b", "c"]
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         return [a.length === y?.length, y]
     }),
@@ -99,7 +99,7 @@ const tests: Test[] = [
         const a = ["a", "b", "c"]
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         y?.constructor?.prototype?.push?.apply?.(y, ["d"])
 
@@ -109,7 +109,7 @@ const tests: Test[] = [
         const a = ["a", "b", "c"]
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         y?.push?.("d")
 
@@ -121,7 +121,7 @@ const tests: Test[] = [
         }
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         return [a.name === y?.name, y]
     }),
@@ -131,7 +131,7 @@ const tests: Test[] = [
         }
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         const aVal = a(1, 2)
         const yVal = y(1, 2)
@@ -148,7 +148,7 @@ const tests: Test[] = [
         }
 
         const x = serialize(test)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         const objt = new test(3)
         const objy = new y(3)
@@ -165,7 +165,7 @@ const tests: Test[] = [
         }
 
         const x = serialize(test)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         const objt = new test(3)
         const objy = new y(3)
@@ -178,7 +178,7 @@ const tests: Test[] = [
         }
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     }),
@@ -188,7 +188,7 @@ const tests: Test[] = [
         }
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     }),
@@ -198,7 +198,7 @@ const tests: Test[] = [
         }
 
         const x = serialize(a)
-        const y = deserialize<any>(x)
+        const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     })
