@@ -9,6 +9,12 @@ enum valueType {
     NATIVE
 }
 
+enum objectType {
+    NORMAL,
+    FUNCTION,
+    ARRAY
+}
+
 export function stringify(something: any): string {
     const type = getValueType(something)
 
@@ -43,12 +49,23 @@ function parseComplex(value: (parsedObject | number)[]): object {
     const output: object[] = []
 
     for (const object of input) {
-        output.push((typeof object === "number")
-            ? natives[object]
-            : (object.fun === null)
-                ? {}
-                : parseFunctionString(object.fun)
-        )
+        if (typeof object === "number") {
+            output.push(natives[object])
+        } else {
+            switch (object.type) {
+                case objectType.NORMAL:
+                    output.push({})
+                    break
+                case objectType.ARRAY:
+                    output.push([])
+                    break
+                case objectType.FUNCTION:
+                    output.push(parseFunctionString(object.fun))
+                    break
+                default:
+                    throw `Invalid complex type: ${object.type}`
+            }
+        }
     }
 
     for (let i = 0; i < input.length; i++) {
@@ -137,6 +154,7 @@ function getValueType(value: any): valueType {
 }
 
 type parsedObject = {
+    type: objectType,
     fun: string | null,
     proto: proto,
     props: property[]
@@ -188,6 +206,12 @@ function serializeComplex(complex: object): (parsedObject | number)[] {
             continue
         }
 
+        const type: objectType = (Array.isArray(current))
+            ? objectType.ARRAY
+            : (typeof current === "function")
+                ? objectType.FUNCTION
+                : objectType.NORMAL
+
         const proto = Object.getPrototypeOf(current)
         let nativeProto = true
         let protoIndex = findNativeIndex(proto)
@@ -197,7 +221,9 @@ function serializeComplex(complex: object): (parsedObject | number)[] {
         }
 
         const p: parsedObject = {
-            fun: (typeof current === "function") ? getFunctionString(current) : null,
+            type: type,
+            //@ts-ignore
+            fun: (type === objectType.FUNCTION) ? getFunctionString(current) : null,
             proto: {
                 native: nativeProto,
                 index: protoIndex
