@@ -90,7 +90,7 @@ function serializeBasic(type: valueType, basic: any): string {
         case valueType.UNDEFINED:
             return ""
         case valueType.NATIVE:
-            return basic
+            return findNativeIndex(basic).toString()
     }
     console.error("Invalid parameter passed to basic2str:", basic)
     throw "ParameterError"
