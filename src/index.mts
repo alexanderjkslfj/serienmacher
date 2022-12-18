@@ -44,7 +44,7 @@ function parseBasic(type: valueType, value: string): any {
     }
 }
 
-function parseComplex(value: (parsedObject | number)[]): object {
+function parseComplex(value: (serializedObject | number)[]): object {
     const input = value
     const output: object[] = []
 
@@ -153,7 +153,7 @@ function getValueType(value: any): valueType {
 
 }
 
-type parsedObject = {
+type serializedObject = {
     type: objectType,
     fun: string | null,
     proto: proto,
@@ -183,8 +183,8 @@ type propertyDescriptor = {
     set: number
 }
 
-function serializeComplex(complex: object): (parsedObject | number)[] {
-    const parsed: (parsedObject | number)[] = []
+function serializeComplex(complex: object): (serializedObject | number)[] {
+    const parsed: (serializedObject | number)[] = []
     const objects: object[] = [complex]
 
     function findOrAddObject(object: object): number {
@@ -220,7 +220,7 @@ function serializeComplex(complex: object): (parsedObject | number)[] {
             protoIndex = findOrAddObject(proto)
         }
 
-        const p: parsedObject = {
+        const p: serializedObject = {
             type: type,
             //@ts-ignore
             fun: (type === objectType.FUNCTION) ? getFunctionString(current) : null,
