@@ -206,7 +206,7 @@ const tests: Test[] = [
         const x = serialize(Object)
         const y = deserialize(x)
 
-        return [x === y, y]
+        return [Object === y, y]
     })
 ];
 
