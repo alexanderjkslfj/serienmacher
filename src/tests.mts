@@ -226,6 +226,22 @@ const tests: Test[] = [
         }
 
         return [error instanceof ReferenceError, error]
+    }),
+    new Test("Non-native Symbol", () => {
+        const sym = Symbol()
+
+        const myObj = {
+            [sym]: {
+                [sym]: 5
+            }
+        }
+
+        const x = serialize(myObj)
+        const y = deserialize(x)
+
+        const newsym = Object.getOwnPropertySymbols(y)?.[0]
+
+        return [y?.[newsym]?.[newsym] === 5, y]
     })
 ];
 
