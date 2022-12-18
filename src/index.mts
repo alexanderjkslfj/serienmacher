@@ -283,8 +283,8 @@ function serializeComplex(complex: object): serializedComplex {
     const symbols: symbol[] = []
 
     /**
-     * Get the index of an object. If necessary, add it to the array.
-     * @param object the object to find (and maybe add)
+     * Get the index of an object. If not found, add it to the array.
+     * @param object the object to find (or add)
      * @returns the index of the object
      */
     function findOrAddObject(object: object): number {
@@ -292,8 +292,8 @@ function serializeComplex(complex: object): serializedComplex {
     }
 
     /**
-     * Get the index of a symbol. If necessary, add it to the array.
-     * @param sym the symbol to find (and maybe add)
+     * Get the index of a symbol. If not found, add it to the array.
+     * @param sym the symbol to find (or add)
      * @returns the index of the symbol
      */
     function findOrAddSymbol(sym: symbol): number {
@@ -301,8 +301,8 @@ function serializeComplex(complex: object): serializedComplex {
     }
 
     /**
-     * Get the index of a value. If necessary, add it to the array.
-     * @param value the value to find (and maybe add)
+     * Get the index of a value. If not found, add it to the array.
+     * @param value the value to find (or add)
      * @returns the index of the value
      */
     function findOrAdd<T>(list: T[], value: T): number {
