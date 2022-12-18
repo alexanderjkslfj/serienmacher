@@ -13,7 +13,7 @@ enum valueType {
 }
 
 /**
- * Types of complex objects
+ * Types of complex objects (used at construction)
  */
 enum objectType {
     NORMAL,
@@ -44,9 +44,11 @@ export function serialize(something: any): string {
  * @returns Deserialized data.
  */
 export function deserialize<T>(something: string): T {
-    const [type, value]: [valueType, any] = JSON.parse(something)
+    const [type, value]: [valueType, string | (serializedObject | number)[]] = JSON.parse(something)
     return (type === valueType.COMPLEX)
+        // @ts-ignore
         ? parseComplex(value)
+        // @ts-ignore
         : parseBasic(type, value)
 }
 
@@ -60,6 +62,8 @@ function parseBasic(type: valueType, value: string): any {
             return Symbol[value]
         case valueType.UNDEFINED:
             return undefined
+        case valueType.NATIVE:
+            return natives[value]
     }
 }
 
