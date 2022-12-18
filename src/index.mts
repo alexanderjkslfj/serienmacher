@@ -128,6 +128,7 @@ function parseComplex(value: serializedList): object {
     const input = value
     const output: object[] = []
 
+    // construct objects
     for (const object of input) {
         if (typeof object === "number") {
             output.push(natives[object])
@@ -148,6 +149,7 @@ function parseComplex(value: serializedList): object {
         }
     }
 
+    // populate objects
     for (let i = 0; i < input.length; i++) {
         if (typeof input[i] === "number")
             continue
@@ -199,39 +201,59 @@ function serializeComplex(complex: object): serializedList {
     const parsed: serializedList = []
     const objects: object[] = [complex]
 
+    /**
+     * Get the index of an object. If necessary, add it to the array.
+     * @param object the object to find (any maybe add)
+     * @returns the index of the object
+     */
     function findOrAddObject(object: object): number {
+
+        // get index of object
         let valueIndex = objects.findIndex(o => o === object)
+
+        // check whether the object exists in the array
         if (valueIndex === -1) {
+            // add the object to the array and return its index
             objects.push(object)
             return objects.length - 1
         } else {
+            // return the index of the object
             return valueIndex
         }
     }
 
+    // iterate over the objects (including dynamically added ones)
     for (let serialized = 0; serialized < objects.length; serialized++) {
         const current = objects[serialized]
 
+        // check if the object is native and push its index if so
         const nativeIndex = findNativeIndex(current)
         if (nativeIndex !== -1) {
             parsed.push(nativeIndex)
             continue
         }
 
+        // check the object's type
         const type: objectType = (Array.isArray(current))
             ? objectType.ARRAY
             : (typeof current === "function")
                 ? objectType.FUNCTION
                 : objectType.NORMAL
 
+        // get the prototype and its data
         const proto = Object.getPrototypeOf(current)
+
+        // get the prototype's native index
         let nativeProto = true
         let protoIndex = findNativeIndex(proto)
+
+        // if the prototype isn't native, get its object index
         if (protoIndex === -1) {
             nativeProto = false
             protoIndex = findOrAddObject(proto)
         }
 
+        // initialize the serialized object
         const p: serializedObject = {
             type: type,
             fun: (type === objectType.FUNCTION) ? getFunctionString(current as CallableFunction) : null,
@@ -242,32 +264,40 @@ function serializeComplex(complex: object): serializedList {
             props: []
         }
 
+        // iterate over the properties of the object, serialize them, and add them to the serialized object
         for (const key of Reflect.ownKeys(current)) {
             const rawDescriptor: PropertyDescriptor = Object.getOwnPropertyDescriptor(current, key)!
 
             const symbolName = (typeof key === "symbol") ? tryFindSymbol(key) : ""
 
+            // if the key is a non-native symbol, skip it
             if (symbolName === null)
                 continue
 
             const getter = rawDescriptor.get
             const setter = rawDescriptor.set
 
+            // get the index of the getter, if it exists
             const getterIndex = (typeof getter === "function")
                 ? findOrAddObject(getter)
                 : -1
 
+            // get the index of the setter, if it exists
             const setterIndex = (typeof setter === "function")
                 ? findOrAddObject(setter)
                 : -1
 
             const value = rawDescriptor.value
+
+            // get the type of the property value
             const type = getValueType(value)
 
+            // if the value is complex, get its index
             let valueIndex = (type === valueType.COMPLEX)
                 ? findOrAddObject(value)
                 : -1
 
+            // construct a serialized descriptor
             const descriptor: propertyDescriptor = {
                 configurable: (typeof rawDescriptor.configurable === "boolean") ? rawDescriptor.configurable : true,
                 enumerable: (typeof rawDescriptor.enumerable === "boolean") ? rawDescriptor.enumerable : false,
@@ -279,6 +309,7 @@ function serializeComplex(complex: object): serializedList {
                     : -1
             }
 
+            // add the serialized property to the serialized object
             p.props.push({
                 key: {
                     symbol: typeof key === "symbol",
@@ -428,13 +459,11 @@ function parseFunctionString(str: string): CallableFunction | null {
         } else { // disassemble function to avoid using eval
 
             // disassemble function
-            const paramstr = str.match(/(?<=^[^(]*\()[^)]*/)?.[0]
-            if (typeof paramstr !== "string")
-                return null
-            const params = [...paramstr.matchAll(/[^\s,]/g)].map(param => param[0])
-            const fun = str.match(/(?<=^[^{]*{)[^]*(?=}[^}]*$)/)?.[0]
-            if (typeof fun !== "string")
-                return null
+            const paramstr = str.match(/(?<=^[^(]*\()[^)]*/)?.[0]                   // "(a, b) => { return a+b }" becomes "a, b"
+            if (typeof paramstr !== "string") return null                           // return null if input wasn't a function
+            const params = [...paramstr.matchAll(/[^\s,]/g)].map(param => param[0]) // "a, b" becomes ["a", "b"]
+            const fun = str.match(/(?<=^[^{]*{)[^]*(?=}[^}]*$)/)?.[0]               // "(a, b) => { return a+b }" becomes "return a+b"
+            if (typeof fun !== "string") return null                                // return null if input wasn't a function
 
             // create and return function
             return Function(...params, fun)
