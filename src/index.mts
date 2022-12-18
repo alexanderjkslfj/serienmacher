@@ -3,7 +3,7 @@ import natives from "./natives.mjs"
 /**
  * Types of values (which may use different methods for serialization/deserialization)
  */
-enum valueType {
+export enum valueType {
     JSONREADY,
     COMPLEX,
     BIGINT,
@@ -15,13 +15,13 @@ enum valueType {
 /**
  * Types of complex objects (used at construction)
  */
-enum objectType {
+export enum objectType {
     NORMAL,
     FUNCTION,
     ARRAY
 }
 
-enum keyType {
+export enum keyType {
     STRING,
     NATIVE_SYMBOL,
     CUSTOM_SYMBOL
@@ -40,21 +40,21 @@ type TypedBasic<T> =
 /**
  * List of serialized objects and native indexes.
  */
-type serializedList = (serializedObject | number)[]
+export type serializedList = (serializedObject | number)[]
 
 /**
  * Representation of a serialized complex object.
  * Contains a list of serialized and native objects as well as a list of symbol descriptions
  */
-type serializedComplex = {
+export type serializedComplex = {
     objects: serializedList,
     symbols: (string | null)[]
 }
 
 /**
- * A complex object in serialized form
+ * An object in serialized form, part of a serialized complex
  */
-type serializedObject = {
+export type serializedObject = {
     type: objectType,
     fun: string | null,
     proto: proto,
@@ -64,7 +64,7 @@ type serializedObject = {
 /**
  * Index of the prototype and whether it's native
  */
-type proto = {
+export type proto = {
     native: boolean,
     index: number
 }
@@ -72,13 +72,13 @@ type proto = {
 /**
  * Data of an object property
  */
-type property = {
+export type property = {
     key: propkey,
     type: valueType,
     descriptor: propertyDescriptor
 }
 
-type propkey = {
+export type propkey = {
     type: keyType.STRING | keyType.NATIVE_SYMBOL,
     value: string
 } | {
@@ -89,7 +89,7 @@ type propkey = {
 /**
  * Descriptor of an object property
  */
-type propertyDescriptor = {
+export type propertyDescriptor = {
     configurable: boolean,
     writable: boolean,
     enumerable: boolean,
