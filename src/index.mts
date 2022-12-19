@@ -101,10 +101,7 @@ export type propertyDescriptor = {
 /**
  * Serialize data. Supports everything except:
  *  - non-pure functions
- *  - objects relying on fundamentally non-serializable things:
- *      - Blobs
- *      - Workers
- *      - etc.
+ *  - objects relying on fundamentally non-serializable things, like Workers
  * 
  * Warning: Everything (except native objects) will be serialized, as deep and exact as possible. This can lead to huge strings of data, even for small objects.
  * @param something Data to be serialized.
