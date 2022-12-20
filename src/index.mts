@@ -63,7 +63,8 @@ type serializedObject<type extends objectType> = {
 }
 
 type specialData<type extends objectType> = (
-    type extends objectType.BLOB ? string
+    type extends objectType.FUNCTION ? string
+    : type extends objectType.BLOB ? string
     : undefined)
 
 /**
@@ -357,8 +358,8 @@ async function serializeComplex(complex: object): Promise<serializedComplex> {
         // check the object's type and data
         const type = getObjectType(current)
 
-        if(type === objectType.FUNCTION) {
-            if(isNativeFunction(current as CallableFunction)) {
+        if (type === objectType.FUNCTION) {
+            if (isNativeFunction(current as CallableFunction)) {
                 natives.push(current)
                 parsed.push(natives.length - 1)
                 continue
