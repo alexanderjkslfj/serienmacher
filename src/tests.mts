@@ -242,6 +242,16 @@ const tests: Test[] = [
         const newsym = Object.getOwnPropertySymbols(y)?.[0]
 
         return [y?.[newsym]?.[newsym] === 5, y]
+    }),
+    new Test("Blob", async () => {
+        const blob = new Blob(["abcdef"])
+
+        const x = await serialize(blob)
+        const y = deserialize(x)
+
+        const newtext = await blob.text()
+
+        return [newtext === "abcdef", y]
     })
 ];
 
