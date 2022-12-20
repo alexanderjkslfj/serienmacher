@@ -3,7 +3,7 @@ import natives from "./natives.mjs"
 /**
  * Types of values (which may use different methods for serialization/deserialization)
  */
-export enum valueType {
+enum valueType {
     JSONREADY,
     COMPLEX,
     BIGINT,
@@ -15,14 +15,14 @@ export enum valueType {
 /**
  * Types of complex objects (used at construction)
  */
-export enum objectType {
+enum objectType {
     NORMAL,
     ARRAY,
     FUNCTION,
     BLOB
 }
 
-export enum keyType {
+enum keyType {
     STRING,
     NATIVE_SYMBOL,
     CUSTOM_SYMBOL
@@ -41,13 +41,13 @@ type TypedBasic<T> =
 /**
  * List of serialized objects and native indexes.
  */
-export type serializedList = (serializedObject<any> | number)[]
+type serializedList = (serializedObject<any> | number)[]
 
 /**
  * Representation of a serialized complex object.
  * Contains a list of serialized and native objects as well as a list of symbol descriptions
  */
-export type serializedComplex = {
+type serializedComplex = {
     objects: serializedList,
     symbols: (string | null)[]
 }
@@ -55,21 +55,21 @@ export type serializedComplex = {
 /**
  * An object in serialized form, part of a serialized complex
  */
-export type serializedObject<type extends objectType> = {
+type serializedObject<type extends objectType> = {
     type: type,
     data: specialData<type>,
     proto: proto,
     props: property[]
 }
 
-export type specialData<type extends objectType> = (
+type specialData<type extends objectType> = (
     type extends objectType.BLOB ? string
     : undefined)
 
 /**
  * Index of the prototype and whether it's native
  */
-export type proto = {
+type proto = {
     native: boolean,
     index: number
 }
@@ -77,13 +77,13 @@ export type proto = {
 /**
  * Data of an object property
  */
-export type property = {
+type property = {
     key: propkey,
     type: valueType,
     descriptor: propertyDescriptor
 }
 
-export type propkey = {
+type propkey = {
     type: keyType.STRING | keyType.NATIVE_SYMBOL,
     value: string
 } | {
@@ -94,7 +94,7 @@ export type propkey = {
 /**
  * Descriptor of an object property
  */
-export type propertyDescriptor = {
+type propertyDescriptor = {
     configurable: boolean,
     writable: boolean,
     enumerable: boolean,
