@@ -6,6 +6,9 @@ if (["object", "function"].includes(typeof globalThis) && globalThis !== null) n
 if (["object", "function"].includes(typeof this) && this !== null) natives.add(this)
 if (["object", "function"].includes(typeof window) && window !== null) natives.add(window)
 
+if (["object", "function"].includes(typeof Blob) && Blob !== null) natives.add(Blob)
+if (["object", "function"].includes(typeof ArrayBuffer) && ArrayBuffer !== null) natives.add(ArrayBuffer)
+
 // recursively retrieve all objects referenced by previously retrieved objects
 for (const object of natives) {
 

@@ -356,6 +356,15 @@ async function serializeComplex(complex: object): Promise<serializedComplex> {
 
         // check the object's type and data
         const type = getObjectType(current)
+
+        if(type === objectType.FUNCTION) {
+            if(isNativeFunction(current as CallableFunction)) {
+                natives.push(current)
+                parsed.push(natives.length - 1)
+                continue
+            }
+        }
+
         const data = await getObjectData(current, type)
 
         // get the prototype and its data
@@ -555,7 +564,11 @@ function parseFunctionString(str: string): CallableFunction | null {
 
         }
 
-    } catch {
-        return null
+    } catch (err) {
+        throw `Invalid function string: ${str}`
     }
+}
+
+function isNativeFunction(fun: CallableFunction): boolean {
+    return fun?.toString?.()?.match(/^[^{]*{\s*\[native\s*code\]\s*}\s*$/) != null
 }
