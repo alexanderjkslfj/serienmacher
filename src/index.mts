@@ -147,11 +147,9 @@ function parseBasic<T extends valueType>(type: T, value: string): TypedBasic<T> 
         case valueType.JSONREADY:
             return JSON.parse(value)
         case valueType.BIGINT:
-            // @ts-ignore
-            return BigInt(value)
+            return BigInt(value) as any
         case valueType.SYMBOL:
-            // @ts-ignore
-            return Symbol.for(value)
+            return Symbol.for(value) as any
         case valueType.UNDEFINED:
             return undefined
         case valueType.NATIVE:
