@@ -36,42 +36,42 @@ class Test {
 }
 
 const tests: Test[] = [
-    new Test("Simple String", () => {
-        const x = deserialize(serialize("Hello World"))
+    new Test("Simple String", async () => {
+        const x = deserialize(await serialize("Hello World"))
 
         return [x === "Hello World", x]
     }),
-    new Test("Basic Object", () => {
-        const x = serialize({ a: 5 })
+    new Test("Basic Object", async () => {
+        const x = await serialize({ a: 5 })
         const y = deserialize(x)
 
         return [y?.a === 5, y]
     }),
-    new Test("Basic Object with String", () => {
-        const x = serialize({ a: "b" })
+    new Test("Basic Object with String", async () => {
+        const x = await serialize({ a: "b" })
         const y = deserialize(x)
 
         return [y?.a === "b", y]
     }),
-    new Test("Cyclic Object", () => {
+    new Test("Cyclic Object", async () => {
         const a = { a: {} }
         a.a = a
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         return [y?.a?.a?.a?.a?.a === y, y]
     }),
-    new Test("Cyclic Object with Extra Steps", () => {
+    new Test("Cyclic Object with Extra Steps", async () => {
         const a = { b: {} }
         const b = { a: a }
         a.b = b
 
-        const x = deserialize(serialize(a))
+        const x = deserialize(await serialize(a))
 
         return [x?.b?.a?.b?.a === x, x]
     }),
-    new Test("Simple new-based Object", () => {
+    new Test("Simple new-based Object", async () => {
         class a {
             public b: number
 
@@ -82,55 +82,55 @@ const tests: Test[] = [
 
         const b = new a()
 
-        const c = serialize(b)
+        const c = await serialize(b)
         const d = deserialize(c)
 
         return [b.b === d?.b, d]
     }),
-    new Test("Array Values", () => {
+    new Test("Array Values", async () => {
         const a = ["a", "b", "c"]
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         return [a.length === y?.length, y]
     }),
-    new Test("Array Constructor Methods", () => {
+    new Test("Array Constructor Methods", async () => {
         const a = ["a", "b", "c"]
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         y?.constructor?.prototype?.push?.apply?.(y, ["d"])
 
         return [y?.length === 4, y]
     }),
-    new Test("Array Inherited Methods", () => {
+    new Test("Array Inherited Methods", async () => {
         const a = ["a", "b", "c"]
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         y?.push?.("d")
 
         return [y?.length === 4, y]
     }),
-    new Test("Function Name", () => {
+    new Test("Function Name", async () => {
         const a = function b() {
 
         }
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         return [a.name === y?.name, y]
     }),
-    new Test("Function Value", () => {
+    new Test("Function Value", async () => {
         const a = function b(n: number, m: number): number {
             return n + m
         }
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         const aVal = a(1, 2)
@@ -138,7 +138,7 @@ const tests: Test[] = [
 
         return [aVal === 3 && aVal === yVal, yVal]
     }),
-    new Test("Named Class", () => {
+    new Test("Named Class", async () => {
         class test {
             public a: number
 
@@ -147,7 +147,7 @@ const tests: Test[] = [
             }
         }
 
-        const x = serialize(test)
+        const x = await serialize(test)
         const y = deserialize(x)
 
         const objt = new test(3)
@@ -155,7 +155,7 @@ const tests: Test[] = [
 
         return [objt.a === 3 && objt.a === objy.a, y]
     }),
-    new Test("Anonymous Class", () => {
+    new Test("Anonymous Class", async () => {
         const test = class {
             public a: number
 
@@ -164,7 +164,7 @@ const tests: Test[] = [
             }
         }
 
-        const x = serialize(test)
+        const x = await serialize(test)
         const y = deserialize(x)
 
         const objt = new test(3)
@@ -172,49 +172,49 @@ const tests: Test[] = [
 
         return [objt.a === 3 && objt.a === objy.a, y]
     }),
-    new Test("Normal Function", () => {
+    new Test("Normal Function", async () => {
         function a(b: number, c: number) {
             return b + c
         }
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     }),
-    new Test("Anonymous Function", () => {
+    new Test("Anonymous Function", async () => {
         const a = function (b: number, c: number) {
             return b + c
         }
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     }),
-    new Test("Arrow Function", () => {
+    new Test("Arrow Function", async () => {
         const a = (b: number, c: number) => {
             return b + c
         }
 
-        const x = serialize(a)
+        const x = await serialize(a)
         const y = deserialize(x)
 
         return [y(1, 2) === 3, y]
     }),
-    new Test("True Native", () => {
-        const x = serialize(Object)
+    new Test("True Native", async () => {
+        const x = await serialize(Object)
         const y = deserialize(x)
 
         return [Object === y, y]
     }),
-    new Test("Non-pure Function", () => {
+    new Test("Non-pure Function", async () => {
         let aaa = 5
         const b = () => {
             aaa += 5
         }
 
-        const x = serialize(b)
+        const x = await serialize(b)
         const y = deserialize(x)
 
         let error: any = null
@@ -227,7 +227,7 @@ const tests: Test[] = [
 
         return [error instanceof ReferenceError, error]
     }),
-    new Test("Non-native Symbol", () => {
+    new Test("Non-native Symbol", async () => {
         const sym = Symbol()
 
         const myObj = {
@@ -236,7 +236,7 @@ const tests: Test[] = [
             }
         }
 
-        const x = serialize(myObj)
+        const x = await serialize(myObj)
         const y = deserialize(x)
 
         const newsym = Object.getOwnPropertySymbols(y)?.[0]

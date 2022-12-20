@@ -17,8 +17,9 @@ export enum valueType {
  */
 export enum objectType {
     NORMAL,
+    ARRAY,
     FUNCTION,
-    ARRAY
+    BLOB
 }
 
 export enum keyType {
@@ -40,7 +41,7 @@ type TypedBasic<T> =
 /**
  * List of serialized objects and native indexes.
  */
-export type serializedList = (serializedObject | number)[]
+export type serializedList = (serializedObject<any> | number)[]
 
 /**
  * Representation of a serialized complex object.
@@ -54,12 +55,16 @@ export type serializedComplex = {
 /**
  * An object in serialized form, part of a serialized complex
  */
-export type serializedObject = {
-    type: objectType,
-    fun: string | null,
+export type serializedObject<type extends objectType> = {
+    type: type,
+    data: specialData<type>,
     proto: proto,
     props: property[]
 }
+
+export type specialData<type extends objectType> = (
+    type extends objectType.BLOB ? string
+    : undefined)
 
 /**
  * Index of the prototype and whether it's native
@@ -107,11 +112,11 @@ export type propertyDescriptor = {
  * @param something Data to be serialized.
  * @returns Data serialized as a string.
  */
-export function serialize(something: any): string {
+export async function serialize(something: any): Promise<string> {
     const type = getValueType(something)
 
     return JSON.stringify([type, (type === valueType.COMPLEX)
-        ? serializeComplex(something)
+        ? (await serializeComplex(something))
         : serializeBasic(type, something)
     ])
 }
@@ -177,6 +182,21 @@ function serializeBasic<T extends valueType>(type: T, basic: TypedBasic<T>): str
     throw "ParameterError"
 }
 
+function construct<T extends objectType>(type: T, data?: specialData<T>): object {
+    switch (type) {
+        case objectType.NORMAL:
+            return {}
+        case objectType.ARRAY:
+            return []
+        case objectType.FUNCTION:
+            return parseFunctionString(data)
+        case objectType.BLOB:
+            return new Blob([data])
+        default:
+            throw `Unknown specialType: ${type}`
+    }
+}
+
 /**
  * Parse complex data
  * @param value 
@@ -197,23 +217,10 @@ function parseComplex(value: serializedComplex): object {
 
     // construct objects
     for (const object of input) {
-        if (typeof object === "number") {
-            output.push(natives[object])
-        } else {
-            switch (object.type) {
-                case objectType.NORMAL:
-                    output.push({})
-                    break
-                case objectType.ARRAY:
-                    output.push([])
-                    break
-                case objectType.FUNCTION:
-                    output.push(parseFunctionString(object.fun))
-                    break
-                default:
-                    throw `Invalid complex type: ${object.type}`
-            }
-        }
+        output.push((typeof object === "number")
+            ? natives[object]
+            : construct(object.type, object.data)
+        )
     }
 
     // populate objects
@@ -221,7 +228,7 @@ function parseComplex(value: serializedComplex): object {
         if (typeof input[i] === "number")
             continue
 
-        for (const prop of (input[i] as serializedObject).props) {
+        for (const prop of (input[i] as serializedObject<any>).props) {
 
             let key: string | symbol
             switch (prop.key.type) {
@@ -260,13 +267,36 @@ function parseComplex(value: serializedComplex): object {
             Object.defineProperty(output[i], key, descriptor)
         }
 
-        Object.setPrototypeOf(output[i], ((input[i] as serializedObject).proto.native)
-            ? natives[(input[i] as serializedObject).proto.index]
-            : output[(input[i] as serializedObject).proto.index]
+        Object.setPrototypeOf(output[i], ((input[i] as serializedObject<any>).proto.native)
+            ? natives[(input[i] as serializedObject<any>).proto.index]
+            : output[(input[i] as serializedObject<any>).proto.index]
         )
     }
 
     return output[0]
+}
+
+function getObjectType(object: object): objectType {
+    if (Array.isArray(object))
+        return objectType.ARRAY
+    if (object instanceof Blob)
+        return objectType.BLOB
+    if (object instanceof Function)
+        return objectType.FUNCTION
+    return objectType.NORMAL
+}
+
+async function getObjectData(object: object, type: objectType): Promise<any> {
+    switch (type) {
+        case objectType.BLOB:
+            return await (object as Blob).text()
+        case objectType.FUNCTION:
+            return getFunctionString(object as CallableFunction)
+        case objectType.NORMAL:
+        case objectType.ARRAY:
+        default:
+            return null
+    }
 }
 
 /**
@@ -274,7 +304,7 @@ function parseComplex(value: serializedComplex): object {
  * @param complex 
  * @returns 
  */
-function serializeComplex(complex: object): serializedComplex {
+async function serializeComplex(complex: object): Promise<serializedComplex> {
     const parsed: serializedList = []
     const objects: object[] = [complex]
     const symbols: symbol[] = []
@@ -324,12 +354,9 @@ function serializeComplex(complex: object): serializedComplex {
             continue
         }
 
-        // check the object's type
-        const type: objectType = (Array.isArray(current))
-            ? objectType.ARRAY
-            : (typeof current === "function")
-                ? objectType.FUNCTION
-                : objectType.NORMAL
+        // check the object's type and data
+        const type = getObjectType(current)
+        const data = await getObjectData(current, type)
 
         // get the prototype and its data
         const proto = Object.getPrototypeOf(current)
@@ -345,9 +372,9 @@ function serializeComplex(complex: object): serializedComplex {
         }
 
         // initialize the serialized object
-        const p: serializedObject = {
+        const p: serializedObject<typeof type> = {
             type: type,
-            fun: (type === objectType.FUNCTION) ? getFunctionString(current as CallableFunction) : null,
+            data: data,
             proto: {
                 native: nativeProto,
                 index: protoIndex
