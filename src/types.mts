@@ -68,7 +68,7 @@ export type specialData<type extends objectType> = (
 /**
  * Index of the prototype and whether it's native
  */
-export type proto = {
+type proto = {
     native: boolean,
     index: number
 }
@@ -76,7 +76,7 @@ export type proto = {
 /**
  * Data of an object property
  */
-export type property = {
+type property = {
     key: propkey,
     type: valueType,
     descriptor: propertyDescriptor
