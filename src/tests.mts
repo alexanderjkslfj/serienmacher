@@ -264,9 +264,6 @@ const tests: Test[] = [
         const serialized = await serialize(set)
         const deserialized: Set<unknown> = deserialize(serialized)
 
-        console.log(set)
-        console.log(deserialized)
-
         const arr = [...deserialized]
 
         return [
