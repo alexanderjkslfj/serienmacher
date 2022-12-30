@@ -1,4 +1,4 @@
-import natives from "./natives.mjs"
+import { addNatives, natives } from "./natives.mjs"
 import { valueType, serializedComplex, TypedBasic, objectType, specialData, keyType, serializedObject, serializedList, propertyDescriptor, propkey } from "./types.mjs"
 
 /**
@@ -255,7 +255,7 @@ async function serializeComplex(complex: object): Promise<serializedComplex> {
 
         if (type === objectType.FUNCTION) {
             if (isNativeFunction(current as CallableFunction)) {
-                natives.push(current)
+                addNatives(current)
                 parsed.push(natives.length - 1)
                 continue
             }

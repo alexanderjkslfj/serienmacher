@@ -1,29 +1,61 @@
-// set of all native objects
-const natives: Set<object> = new Set<object>()
+const nativeSet: Set<object> = new Set<object>()
 
-// add initial objects
-if (["object", "function"].includes(typeof globalThis) && globalThis !== null) natives.add(globalThis)
-if (["object", "function"].includes(typeof this) && this !== null) natives.add(this)
-if (["object", "function"].includes(typeof window) && window !== null) natives.add(window)
+export const natives: Array<object> = []
 
-if (["object", "function"].includes(typeof Blob) && Blob !== null) natives.add(Blob)
-if (["object", "function"].includes(typeof ArrayBuffer) && ArrayBuffer !== null) natives.add(ArrayBuffer)
+export function addNatives(...newNatives: object[]): void {
+    // get previous size of set
+    let size = nativeSet.size;
 
-// recursively retrieve all objects referenced by previously retrieved objects
-for (const object of natives) {
+    // add new natives to set
+    for (const native of newNatives) {
+        nativeSet.add(native);
+    }
 
-    Object.values(Object.getOwnPropertyDescriptors(object)).forEach(descriptor => {
+    // iterate over natives
+    for (const native of nativeSet) {
+
+        // skip over natives already present previously
+        if (size !== 0) {
+            size--;
+            continue;
+        }
+
+        // add non-primitive properties of native object to natives
+        addProperties(native)
+
+    }
+
+    // add new natives to array
+    natives.splice(0, natives.length, ...nativeSet)
+}
+
+function addProperties(native: object): void {
+    addValues(native)
+    addPrototype(native)
+}
+
+function addValues(native: object): void {
+
+    Object.values(Object.getOwnPropertyDescriptors(native)).forEach(descriptor => {
 
         if (["object", "function"].includes(typeof descriptor.value) && descriptor.value !== null)
-            natives.add(descriptor.value)
+            nativeSet.add(descriptor.value)
 
     })
 
-    const proto = Object.getPrototypeOf(object)
+}
+
+function addPrototype(native: object): void {
+
+    const proto = Object.getPrototypeOf(native)
     if (["object", "function"].includes(typeof proto) && proto !== null)
-        natives.add(proto)
+        nativeSet.add(proto)
 
 }
 
-// export native objects as array
-export default Array.from(natives)
+if (["object", "function"].includes(typeof globalThis) && globalThis !== null) addNatives(globalThis)
+if (["object", "function"].includes(typeof this) && this !== null) addNatives(this)
+if (["object", "function"].includes(typeof window) && window !== null) addNatives(window)
+
+if (["object", "function"].includes(typeof Blob) && Blob !== null) addNatives(Blob)
+if (["object", "function"].includes(typeof ArrayBuffer) && ArrayBuffer !== null) addNatives(ArrayBuffer)
