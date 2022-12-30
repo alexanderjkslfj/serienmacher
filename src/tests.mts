@@ -291,7 +291,28 @@ const tests: Test[] = [
             deserialized.size === 3,
             deserialized
         ]
-    })
+    }),
+    new Test("WeakMap", async () => {
+        const map = new WeakMap()
+
+        const a = {}
+        const b = {}
+        const c = {}
+
+        map.set(a, 1)
+        map.set(b, 2)
+        map.set(c, 3)
+
+        const serialized = await serialize(map)
+        const deserialized: WeakMap<object, unknown> = deserialize(serialized)
+
+        return [
+            deserialized.get(a) === 1 &&
+            deserialized.get(b) === 2 &&
+            deserialized.get(c) === 3,
+            deserialized
+        ]
+    }),
 ];
 
 Test.runTests(tests).then(success => {
