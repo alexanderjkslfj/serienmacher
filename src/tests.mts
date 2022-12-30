@@ -252,6 +252,30 @@ const tests: Test[] = [
         const newtext = await blob.text()
 
         return [newtext === "abcdef", y]
+    }),
+    new Test("Set", async () => {
+        const set = new Set()
+
+        set.add(1)
+        set.add(2)
+        set.add(2)
+        set.add(3)
+
+        const serialized = await serialize(set)
+        const deserialized: Set<unknown> = deserialize(serialized)
+
+        console.log(set)
+        console.log(deserialized)
+
+        const arr = [...deserialized]
+
+        return [
+            arr[0] === 1 &&
+            arr[1] === 2 &&
+            arr[2] === 3 &&
+            arr.length === 3,
+            deserialized
+        ]
     })
 ];
 
