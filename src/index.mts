@@ -466,5 +466,5 @@ function parseFunctionString(str: string): CallableFunction | null {
 }
 
 function isNativeFunction(fun: CallableFunction): boolean {
-    return fun?.toString?.()?.match(/^[^{]*{\s*\[native\s*code\]\s*}\s*$/) != null
+    return fun?.toString?.()?.match(/^[^{]*{\s*\[\s*native\s*code\s*\]\s*}\s*$/) != null
 }
