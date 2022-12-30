@@ -273,6 +273,24 @@ const tests: Test[] = [
             arr.length === 3,
             deserialized
         ]
+    }),
+    new Test("Map", async () => {
+        const map = new Map()
+
+        map.set("a", 1)
+        map.set("b", 2)
+        map.set("c", 3)
+
+        const serialized = await serialize(map)
+        const deserialized: Map<unknown, unknown> = deserialize(serialized)
+
+        return [
+            deserialized.get("a") === 1 &&
+            deserialized.get("b") === 2 &&
+            deserialized.get("c") === 3 &&
+            deserialized.size === 3,
+            deserialized
+        ]
     })
 ];
 
