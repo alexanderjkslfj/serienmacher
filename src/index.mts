@@ -442,11 +442,11 @@ function parseFunctionString(str: string): CallableFunction | null {
 
         if (isClass) { // parse class using eval
 
-            let a: CallableFunction;
+            let reconstructedClass: CallableFunction;
 
-            eval(`a = ${str}`)
+            eval(`reconstructedClass = ${str}`)
 
-            return a
+            return reconstructedClass
 
         } else { // disassemble function to avoid using eval
 
