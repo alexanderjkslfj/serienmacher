@@ -10,12 +10,12 @@ import { valueType, serializedComplex, TypedBasic, objectType, specialData, keyT
  * @param something Data to be serialized.
  * @returns Data serialized as a string.
  */
-export async function serialize(something: any): Promise<string> {
+export async function serialize(something: unknown): Promise<string> {
     const type = getValueType(something)
 
     return JSON.stringify([type, (type === valueType.COMPLEX)
-        ? (await serializeComplex(something))
-        : serializeBasic(type, something)
+        ? (await serializeComplex(something as object))
+        : serializeBasic(type, something as object)
     ])
 }
 
@@ -24,7 +24,7 @@ export async function serialize(something: any): Promise<string> {
  * @param something Data to be deserialized.
  * @returns Deserialized data.
  */
-export function deserialize(something: string): any {
+export function deserialize(something: string): unknown {
     const [type, value]: [valueType, string | serializedComplex]
         = JSON.parse(something)
 
@@ -39,14 +39,14 @@ export function deserialize(something: string): any {
  * @param value 
  * @returns 
  */
-function parseBasic<T extends valueType>(type: T, value: string): TypedBasic<T> {
+function parseBasic(type: valueType, value: string): TypedBasic<typeof type> {
     switch (type) {
         case valueType.JSONREADY:
             return JSON.parse(value)
         case valueType.BIGINT:
-            return BigInt(value) as any
+            return BigInt(value)
         case valueType.SYMBOL:
-            return Symbol.for(value) as any
+            return Symbol.for(value)
         case valueType.UNDEFINED:
             return undefined
         case valueType.NATIVE:
@@ -60,7 +60,7 @@ function parseBasic<T extends valueType>(type: T, value: string): TypedBasic<T> 
  * @param basic
  * @returns string describing the data
  */
-function serializeBasic<T extends valueType>(type: T, basic: TypedBasic<T>): string {
+function serializeBasic(type: valueType, basic: TypedBasic<typeof type>): string {
     switch (type) {
         case valueType.JSONREADY:
             return JSON.stringify(basic)
@@ -78,7 +78,7 @@ function serializeBasic<T extends valueType>(type: T, basic: TypedBasic<T>): str
     throw "ParameterError"
 }
 
-function construct<T extends objectType>(type: T, data?: specialData<T>): object {
+function construct(type: objectType, data?: specialData<objectType>): object {
     switch (type) {
         case objectType.NORMAL:
             return {}
@@ -121,10 +121,12 @@ function parseComplex(value: serializedComplex): object {
 
     // populate objects
     for (let i = 0; i < input.length; i++) {
-        if (typeof input[i] === "number")
+        const item = input[i]
+
+        if (typeof item === "number")
             continue
 
-        for (const prop of (input[i] as serializedObject<any>).props) {
+        for (const prop of item.props) {
 
             let key: string | symbol
             switch (prop.key.type) {
@@ -148,10 +150,10 @@ function parseComplex(value: serializedComplex): object {
             }
 
             if (prop.descriptor.set !== -1)
-                descriptor.set = output[prop.descriptor.set] as () => any
+                descriptor.set = output[prop.descriptor.set] as () => unknown
 
             if (prop.descriptor.get !== -1)
-                descriptor.get = output[prop.descriptor.get] as () => any
+                descriptor.get = output[prop.descriptor.get] as () => unknown
 
             if (prop.descriptor.set === -1 && prop.descriptor.get === -1) {
                 descriptor.writable = prop.descriptor.writable
@@ -163,9 +165,9 @@ function parseComplex(value: serializedComplex): object {
             Object.defineProperty(output[i], key, descriptor)
         }
 
-        Object.setPrototypeOf(output[i], ((input[i] as serializedObject<any>).proto.native)
-            ? natives[(input[i] as serializedObject<any>).proto.index]
-            : output[(input[i] as serializedObject<any>).proto.index]
+        Object.setPrototypeOf(output[i], (item.proto.native)
+            ? natives[item.proto.index]
+            : output[item.proto.index]
         )
     }
 
@@ -182,7 +184,7 @@ function getObjectType(object: object): objectType {
     return objectType.NORMAL
 }
 
-async function getObjectData(object: object, type: objectType): Promise<any> {
+async function getObjectData(object: object, type: objectType): Promise<specialData<typeof type>> {
     switch (type) {
         case objectType.BLOB:
             return await (object as Blob).text()

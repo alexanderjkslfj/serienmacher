@@ -42,14 +42,18 @@ const tests: Test[] = [
         return [x === "Hello World", x]
     }),
     new Test("Basic Object", async () => {
-        const x = await serialize({ a: 5 })
-        const y = deserialize(x)
+        const a = { a: 5 }
+
+        const x = await serialize(a)
+        const y = deserialize(x) as typeof a
 
         return [y?.a === 5, y]
     }),
     new Test("Basic Object with String", async () => {
-        const x = await serialize({ a: "b" })
-        const y = deserialize(x)
+        const a = { a: "b" }
+
+        const x = await serialize(a)
+        const y = deserialize(x) as typeof a
 
         return [y?.a === "b", y]
     }),
@@ -58,7 +62,7 @@ const tests: Test[] = [
         a.a = a
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as any
 
         return [y?.a?.a?.a?.a?.a === y, y]
     }),
@@ -67,7 +71,7 @@ const tests: Test[] = [
         const b = { a: a }
         a.b = b
 
-        const x = deserialize(await serialize(a))
+        const x = deserialize(await serialize(a)) as any
 
         return [x?.b?.a?.b?.a === x, x]
     }),
@@ -83,7 +87,7 @@ const tests: Test[] = [
         const b = new a()
 
         const c = await serialize(b)
-        const d = deserialize(c)
+        const d = deserialize(c) as typeof b
 
         return [b.b === d?.b, d]
     }),
@@ -91,7 +95,7 @@ const tests: Test[] = [
         const a = ["a", "b", "c"]
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as string[]
 
         return [a.length === y?.length, y]
     }),
@@ -99,7 +103,7 @@ const tests: Test[] = [
         const a = ["a", "b", "c"]
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as string[]
 
         y?.constructor?.prototype?.push?.apply?.(y, ["d"])
 
@@ -109,7 +113,7 @@ const tests: Test[] = [
         const a = ["a", "b", "c"]
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as string[]
 
         y?.push?.("d")
 
@@ -121,7 +125,7 @@ const tests: Test[] = [
         }
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as () => unknown
 
         return [a.name === y?.name, y]
     }),
@@ -131,7 +135,7 @@ const tests: Test[] = [
         }
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as typeof a
 
         const aVal = a(1, 2)
         const yVal = y(1, 2)
@@ -148,7 +152,7 @@ const tests: Test[] = [
         }
 
         const x = await serialize(test)
-        const y = deserialize(x)
+        const y = deserialize(x) as typeof test
 
         const objt = new test(3)
         const objy = new y(3)
@@ -165,7 +169,7 @@ const tests: Test[] = [
         }
 
         const x = await serialize(test)
-        const y = deserialize(x)
+        const y = deserialize(x) as typeof test
 
         const objt = new test(3)
         const objy = new y(3)
@@ -178,7 +182,7 @@ const tests: Test[] = [
         }
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as typeof a
 
         return [y(1, 2) === 3, y]
     }),
@@ -188,7 +192,7 @@ const tests: Test[] = [
         }
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as typeof a
 
         return [y(1, 2) === 3, y]
     }),
@@ -198,7 +202,7 @@ const tests: Test[] = [
         }
 
         const x = await serialize(a)
-        const y = deserialize(x)
+        const y = deserialize(x) as typeof a
 
         return [y(1, 2) === 3, y]
     }),
@@ -215,7 +219,7 @@ const tests: Test[] = [
         }
 
         const x = await serialize(b)
-        const y = deserialize(x)
+        const y = deserialize(x) as typeof b
 
         let error: any = null
 
@@ -262,7 +266,7 @@ const tests: Test[] = [
         set.add(3)
 
         const serialized = await serialize(set)
-        const deserialized: Set<unknown> = deserialize(serialized)
+        const deserialized = deserialize(serialized) as Set<unknown>
 
         const arr = [...deserialized]
 
@@ -282,7 +286,7 @@ const tests: Test[] = [
         map.set("c", 3)
 
         const serialized = await serialize(map)
-        const deserialized: Map<unknown, unknown> = deserialize(serialized)
+        const deserialized = deserialize(serialized) as Map<unknown, unknown>
 
         return [
             deserialized.get("a") === 1 &&
@@ -304,7 +308,7 @@ const tests: Test[] = [
         map.set(c, 3)
 
         const serialized = await serialize(map)
-        const deserialized: WeakMap<object, unknown> = deserialize(serialized)
+        const deserialized = deserialize(serialized) as WeakMap<object, unknown>
 
         return [
             deserialized.get(a) === 1 &&
