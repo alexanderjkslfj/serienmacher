@@ -317,6 +317,32 @@ const tests: Test[] = [
             deserialized
         ]
     }),
+    new Test("Erroring Getter", async () => {
+        const object = {
+            get rangeError() {
+                return this.rangeError
+            }
+        }
+
+        const serialized = await serialize(object)
+        const deserialized = deserialize(serialized) as any
+
+        let exception = null
+        try {
+            deserialized?.rangeError
+        } catch(err) {
+            if(err instanceof RangeError) {
+                exception = err
+            } else {
+                throw err
+            }
+        }
+
+        return [
+            exception instanceof RangeError,
+            [deserialized]
+        ]
+    })
 ];
 
 Test.runTests(tests).then(success => {
